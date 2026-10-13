@@ -7,8 +7,10 @@ author_profile: true
 
 {% include base_path %}
 
-
-{% for post in site.portfolio %}
-  {% include archive-single.html %}
-{% endfor %}
-
+{% if site.portfolio.size > 0 %}
+  {% for post in site.portfolio reversed %}
+    {% include archive-single.html %}
+  {% endfor %}
+{% else %}
+  <p>None (Maybe I will add some photos and screenshots in Minecraft in the future.)</p>
+{% endif %}
