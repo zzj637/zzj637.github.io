@@ -28,74 +28,37 @@ related: false
 <link rel="alternate" hreflang="en" href="{{ '/blog/a-note-for-optimizer/en/' | absolute_url }}">
 <meta property="og:title" content="Notes on Optimizers">
 <meta property="og:type" content="article">
-<style>
-:root{color-scheme:light;--paper:#f7f5ef;--surface:#fffdf8;--ink:#172822;--muted:#4c5e55;--green:#21604d;--line:#d3ded4;--mint:#e7efe5;--rust:#9a4329}
-*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.85 "Microsoft YaHei","PingFang SC",system-ui,sans-serif}a{color:var(--green);text-underline-offset:.21em}a:hover{color:var(--rust)}a:focus-visible,input:focus-visible{outline:3px solid #bd6538;outline-offset:4px}html{scroll-padding-top:1.5rem}.wrap{width:min(1680px,calc(100% - 64px));margin-inline:auto}
-.hero{background:#132e27;color:#f7f5ed;border-bottom:7px solid #abd0aa}.hero .wrap{padding:3.5rem 0 2.55rem;display:grid;grid-template-columns:1.45fr 1fr;align-items:center;gap:3rem}.eyebrow{color:#b7dbb6;font-size:.76rem;font-weight:750;letter-spacing:.13em}.hero h1{font:750 clamp(2rem,4.6vw,3.7rem)/1.22 "Microsoft YaHei","PingFang SC",system-ui,sans-serif;letter-spacing:-.035em;margin:.6rem 0 .9rem}.hero p{color:#e2ece2;margin:.6rem 0;max-width:37em}.actions{display:flex;flex-wrap:wrap;gap:.7rem;margin:1.25rem 0}.actions a{background:#c1deb9;border:1px solid #c1deb9;border-radius:5px;color:#132e27;padding:.32rem .75rem;text-decoration:none;font-size:.86rem;font-weight:700}.actions a+a{background:transparent;color:#eef5ea}.stats{display:flex;flex-wrap:wrap;gap:1.3rem;color:#b8d9b9;font-size:.8rem}.stats b{color:white;margin-right:.25rem}
-.map{border:1px solid #57796c;border-radius:12px;background:#1e3b32;padding:1rem 1.35rem;box-shadow:0 14px 30px #0b221b55}.map div{display:grid;grid-template-columns:1.7rem 1fr;gap:.7rem;padding:.54rem 0;border-bottom:1px solid #547567}.map div:last-child{border-bottom:0}.map i{font:600 .74rem/2.4 system-ui;color:#b8d9b9;font-style:normal}.map strong{display:block;line-height:1.3}.map small{display:block;color:#cfdfd3;font-size:.75rem;margin-top:.14rem}
-.columns{display:grid;grid-template-areas:"toc article";grid-template-columns:240px minmax(0,1fr);gap:2.5rem;align-items:start;padding:2.5rem 0 3.5rem}.toc{grid-area:toc;align-self:start;min-width:0;width:100%;position:sticky;top:1.6rem;border-left:3px solid #86aa8d;padding:.3rem 0 .45rem 1rem;font-size:.86rem;line-height:1.52}.toc b{letter-spacing:.1em;font-size:.76rem}.toc ol{margin:.55rem 0 0;padding-left:1.1rem}.toc li{padding:.27rem 0}.toc a{text-decoration:none}.toc a:hover{text-decoration:underline}.article{grid-area:article;min-width:0;width:100%;max-width:none;overflow-wrap:break-word}.article h2{font-size:clamp(1.45rem,3vw,2rem);line-height:1.4;margin:3rem 0 .85rem;border-top:1px solid var(--line);padding-top:1.45rem;letter-spacing:-.025em}.article h2:first-child{border:0;padding:0;margin-top:0}.article h3{line-height:1.4;margin:1.7rem 0 .55rem}.article p{margin:.7rem 0 1.15rem}.article li{margin:.4rem 0}.article ol,.article ul{padding-left:1.6rem}.article blockquote{margin:1.1rem 0 1.6rem;padding:.65rem 1rem;background:var(--mint);border-left:3px solid #6d9975}.article blockquote p{margin:0}.article [id]{display:block}.math-display{background:var(--surface);padding:.68rem .9rem;margin:.85rem 0 1.25rem;border:1px solid var(--line);border-radius:6px;overflow-x:auto}.math-display math{font-size:1.12em}math{font-family:"Cambria Math","STIX Two Math",math}pre{background:#162f27;color:#ebf4e9;border-radius:9px;padding:1rem;overflow:auto;font-size:.84rem;line-height:1.6}code{font-family:Consolas,monospace}.table-wrap{overflow-x:auto;margin:1rem 0 1.4rem;border:1px solid var(--line);border-radius:8px}table{background:var(--surface);width:100%;border-collapse:collapse;font-size:.91rem;line-height:1.6}th{text-align:left;background:var(--mint)}td,th{padding:.65rem .8rem;border-bottom:1px solid var(--line);vertical-align:top}tr:last-child td{border:0}
-.lab{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin:1.1rem 0;padding:1.1rem 1.2rem;border:1px solid #a7c2ac;background:#eef4e9;border-radius:10px}.lab h3{margin:0 0 .3rem}.lab p{font-size:.88rem;color:var(--muted);margin:.3rem 0 .8rem}.lab label{font-size:.84rem;font-weight:700;display:block}.lab input{accent-color:var(--green);width:100%}.lab output{color:var(--rust);font-weight:750;font-variant-numeric:tabular-nums}.lab svg{width:100%;height:auto;align-self:center;background:#f9fcf6;border:1px solid #c5d8c6;border-radius:6px}.lab svg text{font:11px system-ui;fill:var(--muted)}footer{border-top:1px solid var(--line);padding:1.05rem 0 1.5rem;color:var(--muted);font-size:.84rem}
-@media(max-width:1100px){.columns{grid-template-columns:210px minmax(0,1fr);gap:1.5rem}}
-@media(max-width:880px){.hero .wrap{gap:1.6rem}.columns{grid-template-columns:180px minmax(0,1fr);gap:1.25rem}}
-@media(max-width:760px){.columns{display:block}.toc{position:static;max-height:none;margin-bottom:1.8rem}.toc ul{display:grid;grid-template-columns:1fr 1fr;gap:0 1rem}}
-@media(max-width:680px){body{font-size:16px}.wrap{width:calc(100% - 32px)}.hero .wrap{display:block;padding:2.2rem 0 1.55rem}.map{margin-top:1.3rem}.columns{display:block;padding-top:1.6rem}.toc{position:static;margin-bottom:1.8rem}.toc ol{display:grid;grid-template-columns:1fr 1fr;column-gap:1.6rem}.lab{grid-template-columns:1fr}.table-wrap table{min-width:500px}}
-@media print{body{background:white;font-size:11pt}.wrap{width:100%}.hero .wrap,.columns{display:block}.hero{background:white;color:black;border-color:#333}.hero .eyebrow,.hero p{color:black}.map,.actions,.stats,.toc,.lab{display:none}table,pre,.math-display{break-inside:avoid}}
-.hero h1{font-size:clamp(1.85rem,4.1vw,3.45rem);overflow-wrap:anywhere}.hero h1 small{display:block;font-size:.52em;line-height:1.48;letter-spacing:.005em;margin-top:.4rem;color:#cde1cd}
-.article .lab [id]{display:initial}.lab input[id]{display:block;margin:.25rem 0 .6rem}.lab label output{margin-left:.25em}
-.hero p a{color:#cae7bf}.hero p a:hover{color:#fff}.lab.classical{display:block}.lab-controls{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.lab select{font:inherit;background:#fffdf8;border:1px solid #8aa88e;border-radius:4px;padding:.16rem .4rem;color:var(--ink)}.lab-legend{display:flex;gap:.65rem 1.2rem;flex-wrap:wrap;margin:.55rem 0;font-size:.81rem;font-weight:750}.lab-legend span{white-space:nowrap}.lab-legend i{display:inline-block;height:.17em;width:1.15em;margin-right:.3em;vertical-align:middle;background:currentColor}.lab-legend .gd{color:#205e47}.lab-legend .hb{color:#9b421e}.lab-legend .nag{color:#3c539b}.lab small{display:block;color:var(--muted)}.lab-controls input:focus-visible,.lab-controls select:focus-visible{outline:2px solid #9a4329;outline-offset:3px}.lab svg text{font-size:14px}@media(max-width:680px){.lab svg text{font-size:18px}.lab svg tspan{font-size:14px}}
-.map div{display:block}.article>h2:nth-child(2){border:0;margin-top:0;padding-top:0}
-.ema-lab canvas{display:block;width:100%;height:235px;background:#f9fcf6;border:1px solid #c5d8c6;border-radius:6px}.ema-lab input{max-width:28rem}.ema-lab p{margin:.15rem 0 .65rem}.ema-lab .legend{margin:.5rem 0;color:#39544b;font-size:.83rem}.ema-lab .legend b{color:#1d614c}.ema-lab .legend span{color:#525e64}.ema-lab .legend em{color:#9a4329;font-style:normal}
-.map a{display:block;padding:.68rem .15rem;border-bottom:1px solid #57796c;color:#f7f5ed;text-decoration:none}.map a:last-child{border:0}.map a:hover strong{text-decoration:underline}
-.toc{max-height:calc(100vh - 3.2rem);overflow:auto}.toc details{margin:.55rem 0 .65rem}.toc summary{cursor:pointer;font-weight:700}.toc ul{list-style:none;margin:.25rem 0;padding:0 .5rem 0 1.05rem}.toc-start{display:inline-block;margin:.35rem 0 0 1.05rem;font-size:.8em}
-.article>h3{margin:2.1rem 0 .65rem;padding-top:1rem;border-top:1px solid var(--line);font-size:clamp(1.2rem,2.5vw,1.52rem)}.article>h4{font-size:1.05em;line-height:1.45;margin:1.35rem 0 .55rem}.article>h2{margin:3.75rem 0 1rem}.article>h2:nth-child(2){margin-top:0}.article .lab h3{border:0;padding:0}
-@media(max-width:680px){.toc{max-height:none}.toc ul{display:grid;grid-template-columns:1fr 1fr;gap:0 1rem}.article>h2{margin-top:2.5rem}}
-
-.experiment-figure{margin:1.3rem 0 1.75rem}
-.figure-zoom{position:relative;display:block;width:100%;padding:1.7rem .35rem .35rem;border:1px solid var(--line);border-radius:8px;background:white;cursor:zoom-in}
-.figure-zoom img{display:block;width:100%;height:auto}
-.figure-zoom span{position:absolute;top:.25rem;right:.4rem;padding:.05rem .42rem;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink);font:inherit;font-size:.78rem}
-.experiment-figure figcaption{font-size:.85em;line-height:1.55;margin-top:.5rem;color:var(--muted)}
-.figure-dialog{width:min(96vw,1500px);max-height:94vh;padding:.85rem;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
-.figure-dialog::backdrop{background:#112820c0}
-.figure-dialog .dialog-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:.65rem;font-size:.9rem}
-.figure-dialog button{font:inherit;padding:.25rem .55rem;white-space:nowrap;background:white;color:var(--ink);border:1px solid var(--line);border-radius:5px;cursor:pointer}
-.figure-dialog img{display:block;width:auto;max-width:100%;height:auto;margin:auto}
-.figure-dialog .dialog-chart{overflow:auto}
-@media(max-width:760px){.figure-dialog img{min-width:680px;margin:0}}
-@media print{.figure-zoom{padding:.35rem}.figure-zoom span,.figure-dialog{display:none}.experiment-figure{break-inside:avoid}}
-
-.site-links{background:#132e27;border-bottom:1px solid #57796c}
-.site-links .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.7rem;padding-block:.7rem}
-.site-links a{color:#e2ece2;text-decoration:none;font-size:.88rem}
-.site-links a:hover{text-decoration:underline;color:white}
-.hero .author-note{padding:.7rem .9rem;border-left:3px solid #abd0aa;background:#1e3b32;font-size:.9rem;line-height:1.8}
-.toc{text-transform:none;overscroll-behavior:contain;scrollbar-width:thin}
-.toc a{display:block;padding:.25rem .45rem;border-radius:4px;transition:background-color .15s,color .15s}
-.toc a[aria-current="location"]{background:var(--mint);color:var(--green);font-weight:750;box-shadow:inset 3px 0 var(--green)}
-.toc details.is-current>summary{color:var(--green)}
-.toc .toc-start{display:block;margin-left:.6rem}
-@media(prefers-reduced-motion:reduce){.toc a{transition:none}}
-@media print{.site-links{display:none}.hero .author-note{background:white;border-color:#333}}
-</style>
+<script>
+(function () {
+  try {
+    var stored = localStorage.getItem('theme');
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var theme = stored === 'dark' || stored === 'light' ? stored : (prefersDark ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  } catch (e) {}
+})();
+</script>
+<link rel="stylesheet" href="{{ '/assets/css/blog.css' | relative_url }}">
 </head>
 <body>
-<nav class="site-links" aria-label="Site navigation">
- <div class="wrap"><a href="{{ '/' | relative_url }}">Zhu Zijian · Home</a><a href="{{ '/year-archive/' | relative_url }}">Blog Posts</a><a href="{{ '/blog/a-note-for-optimizer/' | relative_url }}" lang="zh-CN" hreflang="zh-CN">中文版</a></div>
-</nav>
-<header class="hero">
- <div class="wrap">
-  <div>
-   <h1>Notes on Optimizers</h1>
-   <p class="author-note">I based this article on my research project and presentation. I wrote it with help from Codex to record my research and reflections.</p>
-   <p>I start with gradient descent, momentum, and adaptive step sizes, then look at how EMA smooths parameter displacements and how Muon and its variants update matrices.</p>
-
+<nav class="topbar" aria-label="Site navigation">
+  <div class="topbar__inner">
+    <a class="topbar__brand" href="{{ '/' | relative_url }}">Zhu Zijian</a>
+    <div class="topbar__links">
+      <a href="{{ '/year-archive/' | relative_url }}">All writing</a>
+      <span class="lang" role="group" aria-label="Language">
+        <a href="{{ '/blog/a-note-for-optimizer/' | relative_url }}" hreflang="zh-CN" lang="zh-CN">中文</a>
+        <a href="{{ '/blog/a-note-for-optimizer/en/' | relative_url }}" hreflang="en" aria-current="page">EN</a>
+      </span>
+    </div>
   </div>
-  <nav class="map" aria-label="Jump to a part">
-   <a href="#part-1"><strong>Classical gradient optimizers</strong><small>Gradient descent, momentum, and AdamW</small></a>
-   <a href="#part-2"><strong>EMA and Nesterov extrapolation</strong><small>Smoothing, query points, and training schedules</small></a>
-   <a href="#part-3"><strong>The Muon family and heavy-tailed noise</strong><small>Matrix updates, implementation, and nuclear-norm stationarity</small></a>
-  </nav>
- </div>
+</nav>
+
+<header class="post-head">
+  <p class="kicker"><span>Research note</span><span class="dot">/</span><time datetime="2026-11-12">2026-11-12</time><span class="dot">/</span><span>Optimization</span></p>
+  <h1>Notes on Optimizers</h1>
+  <p class="dek">I start with gradient descent, momentum, and adaptive step sizes, then look at how EMA smooths parameter displacements and how Muon and its variants update matrices.</p>
+  <p class="byline">I based this article on my research project and presentation. I wrote it with help from Codex to record my research and reflections.</p>
 </header>
 <div class="wrap columns">
  <nav class="toc" aria-label="Table of contents"><b>Table of contents</b><details open data-part="part-1"><summary>Part I · Classical gradient optimizers</summary><a class="toc-start" href="#part-1">Start of this part</a><ul><li><a href="#gradient-descent">Gradient descent and local quadratic models</a></li><li><a href="#sgd">SGD and minibatches</a></li><li><a href="#momentum">Momentum and Nesterov acceleration</a></li><li><a href="#adaptive">AdaGrad, RMSProp, and Adadelta</a></li><li><a href="#adam">Adam and its variants</a></li><li><a href="#lab">A two-dimensional quadratic experiment</a></li></ul></details>
@@ -855,6 +818,13 @@ W_{t+1}=\operatorname{Diag}(g_{t+1})U_{t+1}.</annotation></semantics></math></di
 </ol>
 </main>
 </div>
+<footer class="post-foot">
+  <span>© 2026 Zhu Zijian · Notes on Optimizers</span>
+  <span class="lang" role="group" aria-label="Language">
+    <a href="{{ '/blog/a-note-for-optimizer/' | relative_url }}" hreflang="zh-CN" lang="zh-CN">中文</a>
+    <a href="{{ '/blog/a-note-for-optimizer/en/' | relative_url }}" hreflang="en" aria-current="page">EN</a>
+  </span>
+</footer>
 <script>
 (() => {
 const lr = document.querySelector('#learning-rate');
