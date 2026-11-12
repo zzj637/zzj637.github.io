@@ -1,0 +1,1014 @@
+---
+layout: null
+title: "A Note For Optimizer"
+date: 2026-11-12 00:00:00 +0800
+permalink: /blog/a-note-for-optimizer/
+categories:
+  - blog
+tags:
+  - Optimization
+  - Deep Learning
+excerpt: "从经典梯度优化器到 EMA-Nesterov、Muon 及其变体的研究笔记与个人思考。"
+author_profile: false
+read_time: false
+comments: false
+share: false
+related: false
+---
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="经典梯度优化器、EMA-Nesterov，以及 Muon、MONA、Muown、AngularMuown 和重尾噪声理论。">
+<title>A Note For Optimizer - Zhu Zijian</title>
+<link rel="canonical" href="{{ page.url | absolute_url }}">
+<meta property="og:title" content="A Note For Optimizer">
+<meta property="og:type" content="article">
+<style>
+:root{color-scheme:light;--paper:#f7f5ef;--surface:#fffdf8;--ink:#172822;--muted:#4c5e55;--green:#21604d;--line:#d3ded4;--mint:#e7efe5;--rust:#9a4329}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.85 "Microsoft YaHei","PingFang SC",system-ui,sans-serif}a{color:var(--green);text-underline-offset:.21em}a:hover{color:var(--rust)}a:focus-visible,input:focus-visible{outline:3px solid #bd6538;outline-offset:4px}html{scroll-padding-top:1.5rem}.wrap{width:min(1100px,calc(100% - 48px));margin-inline:auto}
+.hero{background:#132e27;color:#f7f5ed;border-bottom:7px solid #abd0aa}.hero .wrap{padding:3.5rem 0 2.55rem;display:grid;grid-template-columns:1.45fr 1fr;align-items:center;gap:3rem}.eyebrow{color:#b7dbb6;font-size:.76rem;font-weight:750;letter-spacing:.13em}.hero h1{font:750 clamp(2rem,4.6vw,3.7rem)/1.22 "Microsoft YaHei","PingFang SC",system-ui,sans-serif;letter-spacing:-.035em;margin:.6rem 0 .9rem}.hero p{color:#e2ece2;margin:.6rem 0;max-width:37em}.actions{display:flex;flex-wrap:wrap;gap:.7rem;margin:1.25rem 0}.actions a{background:#c1deb9;border:1px solid #c1deb9;border-radius:5px;color:#132e27;padding:.32rem .75rem;text-decoration:none;font-size:.86rem;font-weight:700}.actions a+a{background:transparent;color:#eef5ea}.stats{display:flex;flex-wrap:wrap;gap:1.3rem;color:#b8d9b9;font-size:.8rem}.stats b{color:white;margin-right:.25rem}
+.map{border:1px solid #57796c;border-radius:12px;background:#1e3b32;padding:1rem 1.35rem;box-shadow:0 14px 30px #0b221b55}.map div{display:grid;grid-template-columns:1.7rem 1fr;gap:.7rem;padding:.54rem 0;border-bottom:1px solid #547567}.map div:last-child{border-bottom:0}.map i{font:600 .74rem/2.4 system-ui;color:#b8d9b9;font-style:normal}.map strong{display:block;line-height:1.3}.map small{display:block;color:#cfdfd3;font-size:.75rem;margin-top:.14rem}
+.columns{display:grid;grid-template-columns:212px minmax(0,1fr);gap:3.25rem;align-items:start;padding:2.5rem 0 3.5rem}.toc{position:sticky;top:1.6rem;border-left:3px solid #86aa8d;padding:.3rem 0 .45rem 1rem;font-size:.86rem;line-height:1.52}.toc b{letter-spacing:.1em;font-size:.76rem}.toc ol{margin:.55rem 0 0;padding-left:1.1rem}.toc li{padding:.27rem 0}.toc a{text-decoration:none}.toc a:hover{text-decoration:underline}.article{min-width:0}.article h2{font-size:clamp(1.45rem,3vw,2rem);line-height:1.4;margin:3rem 0 .85rem;border-top:1px solid var(--line);padding-top:1.45rem;letter-spacing:-.025em}.article h2:first-child{border:0;padding:0;margin-top:0}.article h3{line-height:1.4;margin:1.7rem 0 .55rem}.article p{margin:.7rem 0 1.15rem}.article li{margin:.4rem 0}.article ol,.article ul{padding-left:1.6rem}.article blockquote{margin:1.1rem 0 1.6rem;padding:.65rem 1rem;background:var(--mint);border-left:3px solid #6d9975}.article blockquote p{margin:0}.article [id]{display:block}.math-display{background:var(--surface);padding:.68rem .9rem;margin:.85rem 0 1.25rem;border:1px solid var(--line);border-radius:6px;overflow-x:auto}.math-display math{font-size:1.12em}math{font-family:"Cambria Math","STIX Two Math",math}pre{background:#162f27;color:#ebf4e9;border-radius:9px;padding:1rem;overflow:auto;font-size:.84rem;line-height:1.6}code{font-family:Consolas,monospace}.table-wrap{overflow-x:auto;margin:1rem 0 1.4rem;border:1px solid var(--line);border-radius:8px}table{background:var(--surface);width:100%;border-collapse:collapse;font-size:.91rem;line-height:1.6}th{text-align:left;background:var(--mint)}td,th{padding:.65rem .8rem;border-bottom:1px solid var(--line);vertical-align:top}tr:last-child td{border:0}
+.lab{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin:1.1rem 0;padding:1.1rem 1.2rem;border:1px solid #a7c2ac;background:#eef4e9;border-radius:10px}.lab h3{margin:0 0 .3rem}.lab p{font-size:.88rem;color:var(--muted);margin:.3rem 0 .8rem}.lab label{font-size:.84rem;font-weight:700;display:block}.lab input{accent-color:var(--green);width:100%}.lab output{color:var(--rust);font-weight:750;font-variant-numeric:tabular-nums}.lab svg{width:100%;height:auto;align-self:center;background:#f9fcf6;border:1px solid #c5d8c6;border-radius:6px}.lab svg text{font:11px system-ui;fill:var(--muted)}footer{border-top:1px solid var(--line);padding:1.05rem 0 1.5rem;color:var(--muted);font-size:.84rem}
+@media(max-width:880px){.hero .wrap{gap:1.6rem}.columns{grid-template-columns:155px minmax(0,1fr);gap:1.4rem}}
+@media(max-width:680px){body{font-size:16px}.wrap{width:calc(100% - 32px)}.hero .wrap{display:block;padding:2.2rem 0 1.55rem}.map{margin-top:1.3rem}.columns{display:block;padding-top:1.6rem}.toc{position:static;margin-bottom:1.8rem}.toc ol{display:grid;grid-template-columns:1fr 1fr;column-gap:1.6rem}.lab{grid-template-columns:1fr}.table-wrap table{min-width:500px}}
+@media print{body{background:white;font-size:11pt}.wrap{width:100%}.hero .wrap,.columns{display:block}.hero{background:white;color:black;border-color:#333}.hero .eyebrow,.hero p{color:black}.map,.actions,.stats,.toc,.lab{display:none}table,pre,.math-display{break-inside:avoid}}
+.hero h1{font-size:clamp(1.85rem,4.1vw,3.45rem);overflow-wrap:anywhere}.hero h1 small{display:block;font-size:.52em;line-height:1.48;letter-spacing:.005em;margin-top:.4rem;color:#cde1cd}
+.article .lab [id]{display:initial}.lab input[id]{display:block;margin:.25rem 0 .6rem}.lab label output{margin-left:.25em}
+.hero p a{color:#cae7bf}.hero p a:hover{color:#fff}.lab.classical{display:block}.lab-controls{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.lab select{font:inherit;background:#fffdf8;border:1px solid #8aa88e;border-radius:4px;padding:.16rem .4rem;color:var(--ink)}.lab-legend{display:flex;gap:.65rem 1.2rem;flex-wrap:wrap;margin:.55rem 0;font-size:.81rem;font-weight:750}.lab-legend span{white-space:nowrap}.lab-legend i{display:inline-block;height:.17em;width:1.15em;margin-right:.3em;vertical-align:middle;background:currentColor}.lab-legend .gd{color:#205e47}.lab-legend .hb{color:#9b421e}.lab-legend .nag{color:#3c539b}.lab small{display:block;color:var(--muted)}.lab-controls input:focus-visible,.lab-controls select:focus-visible{outline:2px solid #9a4329;outline-offset:3px}.lab svg text{font-size:14px}@media(max-width:680px){.lab svg text{font-size:18px}.lab svg tspan{font-size:14px}}
+.map div{display:block}.article>h2:nth-child(2){border:0;margin-top:0;padding-top:0}
+.ema-lab canvas{display:block;width:100%;height:235px;background:#f9fcf6;border:1px solid #c5d8c6;border-radius:6px}.ema-lab input{max-width:28rem}.ema-lab p{margin:.15rem 0 .65rem}.ema-lab .legend{margin:.5rem 0;color:#39544b;font-size:.83rem}.ema-lab .legend b{color:#1d614c}.ema-lab .legend span{color:#525e64}.ema-lab .legend em{color:#9a4329;font-style:normal}
+.map a{display:block;padding:.68rem .15rem;border-bottom:1px solid #57796c;color:#f7f5ed;text-decoration:none}.map a:last-child{border:0}.map a:hover strong{text-decoration:underline}
+.toc{max-height:calc(100vh - 3.2rem);overflow:auto}.toc details{margin:.55rem 0 .65rem}.toc summary{cursor:pointer;font-weight:700}.toc ul{list-style:none;margin:.25rem 0;padding:0 .5rem 0 1.05rem}.toc-start{display:inline-block;margin:.35rem 0 0 1.05rem;font-size:.8em}
+.article>h3{margin:2.1rem 0 .65rem;padding-top:1rem;border-top:1px solid var(--line);font-size:clamp(1.2rem,2.5vw,1.52rem)}.article>h4{font-size:1.05em;line-height:1.45;margin:1.35rem 0 .55rem}.article>h2{margin:3.75rem 0 1rem}.article>h2:nth-child(2){margin-top:0}.article .lab h3{border:0;padding:0}
+@media(max-width:680px){.toc{max-height:none}.toc ul{display:grid;grid-template-columns:1fr 1fr;gap:0 1rem}.article>h2{margin-top:2.5rem}}
+
+.experiment-figure{margin:1.3rem 0 1.75rem}
+.figure-zoom{position:relative;display:block;width:100%;padding:1.7rem .35rem .35rem;border:1px solid var(--line);border-radius:8px;background:white;cursor:zoom-in}
+.figure-zoom img{display:block;width:100%;height:auto}
+.figure-zoom span{position:absolute;top:.25rem;right:.4rem;padding:.05rem .42rem;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink);font:inherit;font-size:.78rem}
+.experiment-figure figcaption{font-size:.85em;line-height:1.55;margin-top:.5rem;color:var(--muted)}
+.figure-dialog{width:min(96vw,1500px);max-height:94vh;padding:.85rem;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+.figure-dialog::backdrop{background:#112820c0}
+.figure-dialog .dialog-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:.65rem;font-size:.9rem}
+.figure-dialog button{font:inherit;padding:.25rem .55rem;white-space:nowrap;background:white;color:var(--ink);border:1px solid var(--line);border-radius:5px;cursor:pointer}
+.figure-dialog img{display:block;width:auto;max-width:100%;height:auto;margin:auto}
+.figure-dialog .dialog-chart{overflow:auto}
+@media(max-width:760px){.figure-dialog img{min-width:680px;margin:0}}
+@media print{.figure-zoom{padding:.35rem}.figure-zoom span,.figure-dialog{display:none}.experiment-figure{break-inside:avoid}}
+
+.site-links{background:#132e27;border-bottom:1px solid #57796c}
+.site-links .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.7rem;padding-block:.7rem}
+.site-links a{color:#e2ece2;text-decoration:none;font-size:.88rem}
+.site-links a:hover{text-decoration:underline;color:white}
+.hero .author-note{padding:.7rem .9rem;border-left:3px solid #abd0aa;background:#1e3b32;font-size:.9rem;line-height:1.8}
+@media print{.site-links{display:none}.hero .author-note{background:white;border-color:#333}}
+</style>
+</head>
+<body>
+<nav class="site-links" aria-label="网站导航">
+ <div class="wrap"><a href="{{ '/' | relative_url }}">Zhu Zijian · 个人主页</a><a href="{{ '/year-archive/' | relative_url }}">Blog Posts</a></div>
+</nav>
+<header class="hero">
+ <div class="wrap">
+  <div>
+   <h1>A Note For Optimizer</h1>
+   <p class="author-note">本文写作基于本人的research project与presentation，主要作用是记录个人的研究与感想，由Codex辅助写作。</p>
+   <p>从梯度下降、动量和自适应步幅出发，接着看 EMA 如何平滑参数位移，最后进入 Muon 的矩阵更新及其变体。</p>
+
+  </div>
+  <nav class="map" aria-label="跳转到各部分">
+   <a href="#part-1"><strong>经典梯度优化器</strong><small>梯度下降、动量与 AdamW</small></a>
+   <a href="#part-2"><strong>EMA 与 Nesterov 外推</strong><small>平滑、查询点与训练调度</small></a>
+   <a href="#part-3"><strong>Muon 系列与重尾噪声</strong><small>矩阵更新、工程实现与核范数驻点</small></a>
+  </nav>
+ </div>
+</header>
+<div class="wrap columns">
+ <nav class="toc" aria-label="文章目录"><b>文章目录</b><details open data-part="part-1"><summary>第一部分 · 经典梯度优化器</summary><a class="toc-start" href="#part-1">本篇开头</a><ul><li><a href="#gradient-descent">梯度下降与局部二次模型</a></li><li><a href="#sgd">SGD 与小批量</a></li><li><a href="#momentum">Momentum 与 Nesterov</a></li><li><a href="#adaptive">AdaGrad、RMSProp 与 Adadelta</a></li><li><a href="#adam">Adam 及其变体</a></li><li><a href="#lab">二维二次函数实验</a></li></ul></details>
+<details data-part="part-2"><summary>第二部分 · EMA 与 Nesterov 外推</summary><a class="toc-start" href="#part-2">本篇开头</a><ul><li><a href="#ema">什么是 EMA</a></li><li><a href="#lookahead-methods">Nesterov 与其他外推方法</a></li><li><a href="#update">EMA-Nesterov 的更新规则</a></li><li><a href="#convergence">凸优化收敛率</a></li><li><a href="#schedule">训练中的外推调度</a></li><li><a href="#experiments">语言模型实验</a></li><li><a href="#implementation">最小 Python 实现</a></li></ul></details>
+<details data-part="part-3"><summary>第三部分 · Muon 系列与重尾噪声</summary><a class="toc-start" href="#part-3">本篇开头</a><ul><li><a href="#muon">Muon 的来源、递推与工程实现</a></li><li><a href="#mona">MONA：正交化前的梯度差</a></li><li><a href="#muown">Muown：控制权重行范数</a></li><li><a href="#angular-muown">AngularMuown：显式调度转角</a></li><li><a href="#heavy-tailed-muon">重尾噪声下的 Muon</a></li></ul></details></nav>
+ <main class="article"><p><span id="part-1"></span></p>
+<h2>第一部分 · 经典梯度优化器</h2>
+<p><strong>经典优化算法 · 原理与实现</strong></p>
+<p>梯度下降用局部二次模型选步长。SGD 用样本估计梯度，动量利用历史位移，Adam 为每个坐标调整步幅。</p>
+<p><span id="gradient-descent"></span></p>
+<h3>1. 梯度下降与局部二次模型</h3>
+<p>设 <math><semantics><mrow><mi>F</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">F(x)</annotation></semantics></math> 是训练目标。若 <math><semantics><mrow><mo>∇</mo><mi>F</mi></mrow><annotation encoding="application/x-tex">\nabla F</annotation></semantics></math> 是 <math><semantics><mrow><mi>L</mi></mrow><annotation encoding="application/x-tex">L</annotation></semantics></math>-Lipschitz 的，沿位移 <math><semantics><mrow><mi>d</mi></mrow><annotation encoding="application/x-tex">d</annotation></semantics></math> 积分可得二次上界。</p>
+<div class="math-display"><math display="block"><semantics><mrow><mi>F</mi><mo stretchy="false">(</mo><mi>x</mi><mo>+</mo><mi>d</mi><mo stretchy="false">)</mo><mo>≤</mo><mi>F</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>+</mo><mo stretchy="false">⟨</mo><mo>∇</mo><mi>F</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>,</mo><mi>d</mi><mo stretchy="false">⟩</mo><mo>+</mo><mfrac><mrow><mi>L</mi></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="false">‖</mo><mi>d</mi><msubsup><mo stretchy="false">‖</mo><mn>2</mn><mn>2</mn></msubsup><mo>.</mo></mrow><annotation encoding="application/x-tex">F(x+d)\le F(x)+\langle\nabla F(x),d\rangle+\frac{L}{2}\lVert d\rVert_2^2.</annotation></semantics></math></div>
+
+<p>对上界关于 <math><semantics><mrow><mi>d</mi></mrow><annotation encoding="application/x-tex">d</annotation></semantics></math> 求最小值，再代回最优位移，得到更新和下降量。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>x</mi><mi>t</mi></msub><mo>−</mo><mfrac><mn>1</mn><mi>L</mi></mfrac><mo>∇</mo><mi>F</mi><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>,</mo><mspace width="2em"/><mi>F</mi><mo stretchy="false">(</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false">)</mo><mo>≤</mo><mi>F</mi><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>−</mo><mfrac><mn>1</mn><mrow><mn>2</mn><mi>L</mi></mrow></mfrac><mo stretchy="false">‖</mo><mo>∇</mo><mi>F</mi><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo><msubsup><mo stretchy="false">‖</mo><mn>2</mn><mn>2</mn></msubsup><mo>.</mo></mrow><annotation encoding="application/x-tex">x_{t+1}=x_t-\frac1L\nabla F(x_t),\qquad
+F(x_{t+1})\le F(x_t)-\frac1{2L}\lVert\nabla F(x_t)\rVert_2^2.</annotation></semantics></math></div>
+
+<p>若 <math><semantics><mrow><mi>F</mi></mrow><annotation encoding="application/x-tex">F</annotation></semantics></math> 有下界，累加下降量可控制平均梯度平方范数。对凸目标，距离递推给出函数差 <math><semantics><mrow><mi>F</mi><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>−</mo><msup><mi>F</mi><mo>⋆</mo></msup><mo>=</mo><mi>O</mi><mo stretchy="false">(</mo><mn>1</mn><mo>/</mo><mi>t</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">F(x_t)-F^\star=O(1/t)</annotation></semantics></math>。对 <math><semantics><mrow><mi>μ</mi></mrow><annotation encoding="application/x-tex">\mu</annotation></semantics></math>-强凸目标，函数差按 <math><semantics><mrow><mn>1</mn><mo>−</mo><mi>μ</mi><mo>/</mo><mi>L</mi></mrow><annotation encoding="application/x-tex">1-\mu/L</annotation></semantics></math> 的因子收缩。</p>
+<p>考虑一个二维二次函数。</p>
+<div class="math-display"><math display="block"><semantics><mrow><mi>F</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>=</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="false">(</mo><msubsup><mi>x</mi><mn>1</mn><mn>2</mn></msubsup><mo>+</mo><mn>100</mn><msubsup><mi>x</mi><mn>2</mn><mn>2</mn></msubsup><mo stretchy="false">)</mo><mo>,</mo><mspace width="2em"/><mo>∇</mo><mi>F</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>=</mo><mo stretchy="false">(</mo><msub><mi>x</mi><mn>1</mn></msub><mo>,</mo><mn>100</mn><msub><mi>x</mi><mn>2</mn></msub><mo stretchy="false">)</mo><mo>.</mo></mrow><annotation encoding="application/x-tex">F(x)=\frac{1}{2}(x_1^2+100x_2^2),\qquad
+\nabla F(x)=(x_1,100x_2).</annotation></semantics></math></div>
+
+<p>取 <math><semantics><mrow><mi>η</mi><mo>=</mo><mn>0.015</mn></mrow><annotation encoding="application/x-tex">\eta=0.015</annotation></semantics></math>，第一维每步乘 <math><semantics><mrow><mn>0.985</mn></mrow><annotation encoding="application/x-tex">0.985</annotation></semantics></math>，缓慢收缩。第二维每步乘 <math><semantics><mrow><mo>−</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">-0.5</annotation></semantics></math>，交替跨过零点。对正定二次函数，曲率为 <math><semantics><mrow><mi>λ</mi></mrow><annotation encoding="application/x-tex">\lambda</annotation></semantics></math> 的方向每步乘 <math><semantics><mrow><mn>1</mn><mo>−</mo><mi>η</mi><mi>λ</mi></mrow><annotation encoding="application/x-tex">1-\eta\lambda</annotation></semantics></math>。所有方向都收缩的条件是 <math><semantics><mrow><mn>0</mn><mo>&lt;</mo><mi>η</mi><mo>&lt;</mo><mn>2</mn><mo>/</mo><msub><mi>λ</mi><mrow><mi mathvariant="normal">max</mi></mrow></msub></mrow><annotation encoding="application/x-tex">0&lt;\eta&lt;2/\lambda_{\max}</annotation></semantics></math>。</p>
+<p><span id="sgd"></span></p>
+<h3>2. SGD 与小批量</h3>
+<p>令经验风险 <math><semantics><mrow><mi>F</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>=</mo><msup><mi>n</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><msubsup><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></msubsup><msub><mi>f</mi><mi>i</mi></msub><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">F(x)=n^{-1}\sum_{i=1}^n f_i(x)</annotation></semantics></math>。按每次更新使用的样本数，可分为三种方法。</p>
+<div class="table-wrap" tabindex="0" aria-label="可横向滚动的对照表"><table>
+<thead>
+<tr>
+<th>方法</th>
+<th>每步梯度</th>
+<th>主要代价</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>全批量 GD</td>
+<td>在同一参数点计算所有样本梯度并求均值</td>
+<td>一步开销随数据集规模增长</td>
+</tr>
+<tr>
+<td>单样本 SGD</td>
+<td>取一个随机样本的梯度</td>
+<td>每步成本低，方差较大</td>
+</tr>
+<tr>
+<td>小批量 SGD</td>
+<td>取 <math><semantics><mrow><mi>B</mi></mrow><annotation encoding="application/x-tex">B</annotation></semantics></math> 个样本的梯度均值</td>
+<td>多算样本以降低方差，可并行计算</td>
+</tr>
+</tbody></table></div>
+<p>给定 <math><semantics><mrow><msub><mi>x</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">x_t</annotation></semantics></math>，对 <math><semantics><mrow><mi>B</mi></mrow><annotation encoding="application/x-tex">B</annotation></semantics></math> 个样本独立均匀采样。批均值梯度满足 <math><semantics><mrow><mi mathvariant="normal">𝔼</mi><mo stretchy="false">[</mo><msub><mi>g</mi><mi>t</mi></msub><mo>∣</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">]</mo><mo>=</mo><mo>∇</mo><mi>F</mi><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\mathbb E[g_t\mid x_t]=\nabla F(x_t)</annotation></semantics></math>。若单样本的梯度噪声二阶矩至多为 <math><semantics><mrow><msup><mi>σ</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\sigma^2</annotation></semantics></math>，独立性使交叉项为零。</p>
+<div class="math-display"><math display="block"><semantics><mrow><mi mathvariant="normal">𝔼</mi><mo stretchy="false">[</mo><mo stretchy="false">‖</mo><msub><mi>g</mi><mi>t</mi></msub><mo>−</mo><mo>∇</mo><mi>F</mi><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo><msubsup><mo stretchy="false">‖</mo><mn>2</mn><mn>2</mn></msubsup><mo>∣</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">]</mo><mo>≤</mo><mfrac><mrow><msup><mi>σ</mi><mn>2</mn></msup></mrow><mrow><mi>B</mi></mrow></mfrac><mo>.</mo></mrow><annotation encoding="application/x-tex">\mathbb E[\lVert g_t-\nabla F(x_t)\rVert_2^2\mid x_t]\le \frac{\sigma^2}{B}.</annotation></semantics></math></div>
+
+<h4>凸 SGD 的平均迭代点</h4>
+<p>设 <math><semantics><mrow><mi>F</mi></mrow><annotation encoding="application/x-tex">F</annotation></semantics></math> 为凸函数，<math><semantics><mrow><msup><mi>x</mi><mo>⋆</mo></msup></mrow><annotation encoding="application/x-tex">x^\star</annotation></semantics></math> 是闭凸可行集上的最优解。投影更新为 <math><semantics><mrow><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>Π</mi><mrow><mi mathvariant="normal">𝒳</mi></mrow></msub><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>−</mo><mi>η</mi><msub><mi>g</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">x_{t+1}=\Pi_{\mathcal X}(x_t-\eta g_t)</annotation></semantics></math>。用投影的非扩张性、梯度无偏性和二阶矩界 <math><semantics><mrow><mi mathvariant="normal">𝔼</mi><mo stretchy="false">‖</mo><msub><mi>g</mi><mi>t</mi></msub><msubsup><mo stretchy="false">‖</mo><mn>2</mn><mn>2</mn></msubsup><mo>≤</mo><msup><mi>G</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\mathbb E\lVert g_t\rVert_2^2\le G^2</annotation></semantics></math>，得到距离递推。</p>
+<div class="math-display"><math display="block"><semantics><mrow><mn>2</mn><mi>η</mi><mspace width=".17em"/><mi mathvariant="normal">𝔼</mi><mo stretchy="false">[</mo><mi>F</mi><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>−</mo><msup><mi>F</mi><mo>⋆</mo></msup><mo stretchy="false">]</mo><mo>≤</mo><mi mathvariant="normal">𝔼</mi><mo stretchy="false">‖</mo><msub><mi>x</mi><mi>t</mi></msub><mo>−</mo><msup><mi>x</mi><mo>⋆</mo></msup><msubsup><mo stretchy="false">‖</mo><mn>2</mn><mn>2</mn></msubsup><mo>−</mo><mi mathvariant="normal">𝔼</mi><mo stretchy="false">‖</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>−</mo><msup><mi>x</mi><mo>⋆</mo></msup><msubsup><mo stretchy="false">‖</mo><mn>2</mn><mn>2</mn></msubsup><mo>+</mo><msup><mi>η</mi><mn>2</mn></msup><msup><mi>G</mi><mn>2</mn></msup><mo>.</mo></mrow><annotation encoding="application/x-tex">2\eta\,\mathbb E[F(x_t)-F^\star]
+\le
+\mathbb E\lVert x_t-x^\star\rVert_2^2-
+\mathbb E\lVert x_{t+1}-x^\star\rVert_2^2+\eta^2G^2.</annotation></semantics></math></div>
+
+<p>累加后，距离项只剩首尾。由凸性，平均点 <math><semantics><mrow><msub><mover accent="true"><mi>x</mi><mo>¯</mo></mover><mi>T</mi></msub><mo>=</mo><msup><mi>T</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><msubsup><mo>∑</mo><mrow><mi>t</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>T</mi><mo>−</mo><mn>1</mn></mrow></msubsup><msub><mi>x</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">\bar x_T=T^{-1}\sum_{t=0}^{T-1}x_t</annotation></semantics></math> 满足以下函数差上界。</p>
+<div class="math-display"><math display="block"><semantics><mrow><mi mathvariant="normal">𝔼</mi><mo stretchy="false">[</mo><mi>F</mi><mo stretchy="false">(</mo><msub><mover accent="true"><mi>x</mi><mo>¯</mo></mover><mi>T</mi></msub><mo stretchy="false">)</mo><mo>−</mo><msup><mi>F</mi><mo>⋆</mo></msup><mo stretchy="false">]</mo><mo>≤</mo><mfrac><mrow><msup><mi>D</mi><mn>2</mn></msup></mrow><mrow><mn>2</mn><mi>η</mi><mi>T</mi></mrow></mfrac><mo>+</mo><mfrac><mrow><mi>η</mi><msup><mi>G</mi><mn>2</mn></msup></mrow><mrow><mn>2</mn></mrow></mfrac><mo>,</mo><mspace width="2em"/><mi>D</mi><mo>=</mo><mo stretchy="false">‖</mo><msub><mi>x</mi><mn>0</mn></msub><mo>−</mo><msup><mi>x</mi><mo>⋆</mo></msup><msub><mo stretchy="false">‖</mo><mn>2</mn></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">\mathbb E[F(\bar x_T)-F^\star]\le \frac{D^2}{2\eta T}+\frac{\eta G^2}{2},
+\qquad D=\lVert x_0-x^\star\rVert_2.</annotation></semantics></math></div>
+
+<p>取 <math><semantics><mrow><mi>η</mi><mo>=</mo><mi>D</mi><mo>/</mo><mo stretchy="false">(</mo><mi>G</mi><msqrt><mi>T</mi></msqrt><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\eta=D/(G\sqrt T)</annotation></semantics></math>，平均点的期望函数差至多为 <math><semantics><mrow><mi>D</mi><mi>G</mi><mo>/</mo><msqrt><mi>T</mi></msqrt></mrow><annotation encoding="application/x-tex">DG/\sqrt T</annotation></semantics></math>。</p>
+<h4>批量大小与更新次数</h4>
+<p>对无约束、光滑非凸目标，设 <math><semantics><mrow><msup><mi>F</mi><mo>⋆</mo></msup></mrow><annotation encoding="application/x-tex">F^\star</annotation></semantics></math> 为下界。取 <math><semantics><mrow><mi>η</mi><mo>≤</mo><mn>1</mn><mo>/</mo><mi>L</mi></mrow><annotation encoding="application/x-tex">\eta\le 1/L</annotation></semantics></math>，将小批量更新代入第 1 节的下降上界。</p>
+<div class="math-display"><math display="block"><semantics><mrow><mfrac><mn>1</mn><mi>T</mi></mfrac><msubsup><mo>∑</mo><mrow><mi>t</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>T</mi><mo>−</mo><mn>1</mn></mrow></msubsup><mi mathvariant="normal">𝔼</mi><mo stretchy="false">‖</mo><mo>∇</mo><mi>F</mi><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo><msubsup><mo stretchy="false">‖</mo><mn>2</mn><mn>2</mn></msubsup><mo>≤</mo><mfrac><mrow><mn>2</mn><mo stretchy="false">(</mo><mi>F</mi><mo stretchy="false">(</mo><msub><mi>x</mi><mn>0</mn></msub><mo stretchy="false">)</mo><mo>−</mo><msup><mi>F</mi><mo>⋆</mo></msup><mo stretchy="false">)</mo></mrow><mrow><mi>η</mi><mi>T</mi></mrow></mfrac><mo>+</mo><mfrac><mrow><mi>L</mi><mi>η</mi><msup><mi>σ</mi><mn>2</mn></msup></mrow><mrow><mi>B</mi></mrow></mfrac><mo>.</mo></mrow><annotation encoding="application/x-tex">\frac1T\sum_{t=0}^{T-1}\mathbb E\lVert\nabla F(x_t)\rVert_2^2
+\le \frac{2(F(x_0)-F^\star)}{\eta T}+\frac{L\eta\sigma^2}{B}.</annotation></semantics></math></div>
+
+<p>固定步数时，增大 <math><semantics><mrow><mi>B</mi></mrow><annotation encoding="application/x-tex">B</annotation></semantics></math> 会减小方差项。固定样本预算 <math><semantics><mrow><mi>N</mi><mo>=</mo><mi>B</mi><mi>T</mi></mrow><annotation encoding="application/x-tex">N=BT</annotation></semantics></math> 时，增大 <math><semantics><mrow><mi>B</mi></mrow><annotation encoding="application/x-tex">B</annotation></semantics></math> 也会减少更新次数，使第一项增大。</p>
+<p><span id="momentum"></span></p>
+<h3>3. Momentum 与 Nesterov</h3>
+<h4>Heavy-ball 的位移递推</h4>
+<p>令 <math><semantics><mrow><msub><mi>d</mi><mi>t</mi></msub><mo>=</mo><msub><mi>x</mi><mi>t</mi></msub><mo>−</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">d_t=x_t-x_{t-1}</annotation></semantics></math>，重球动量沿用上一步位移。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>d</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mi>γ</mi><msub><mi>d</mi><mi>t</mi></msub><mo>−</mo><mi>η</mi><mo>∇</mo><mi>F</mi><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>,</mo><mspace width="2em"/><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>x</mi><mi>t</mi></msub><mo>+</mo><msub><mi>d</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">d_{t+1}=\gamma d_t-\eta\nabla F(x_t),\qquad x_{t+1}=x_t+d_{t+1}.</annotation></semantics></math></div>
+
+<p>旧梯度的权重按 <math><semantics><mrow><mi>γ</mi></mrow><annotation encoding="application/x-tex">\gamma</annotation></semantics></math> 的幂衰减。同向梯度累积，交替变号的梯度部分抵消。对曲率为 <math><semantics><mrow><mi>λ</mi></mrow><annotation encoding="application/x-tex">\lambda</annotation></semantics></math> 的一维二次函数，递推式为</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo>+</mo><mi>γ</mi><mo>−</mo><mi>η</mi><mi>λ</mi><mo stretchy="false">)</mo><msub><mi>x</mi><mi>t</mi></msub><mo>−</mo><mi>γ</mi><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">x_{t+1}=(1+\gamma-\eta\lambda)x_t-\gamma x_{t-1}.</annotation></semantics></math></div>
+
+<p>当特征多项式 <math><semantics><mrow><msup><mi>z</mi><mn>2</mn></msup><mo>−</mo><mo stretchy="false">(</mo><mn>1</mn><mo>+</mo><mi>γ</mi><mo>−</mo><mi>η</mi><mi>λ</mi><mo stretchy="false">)</mo><mi>z</mi><mo>+</mo><mi>γ</mi></mrow><annotation encoding="application/x-tex">z^2-(1+\gamma-\eta\lambda)z+\gamma</annotation></semantics></math> 的根都在单位圆内时，迭代收敛到零。</p>
+<h4>Nesterov 的外推点</h4>
+<p>Heavy-ball 在 <math><semantics><mrow><msub><mi>x</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">x_t</annotation></semantics></math> 计算梯度。Nesterov 在外推点 <math><semantics><mrow><msub><mi>y</mi><mi>t</mi></msub><mo>=</mo><msub><mi>x</mi><mi>t</mi></msub><mo>+</mo><msub><mi>β</mi><mi>t</mi></msub><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>−</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">y_t=x_t+\beta_t(x_t-x_{t-1})</annotation></semantics></math> 计算梯度，用外推位置的斜率修正位移。</p>
+<p>对确定性光滑凸目标，初始化 <math><semantics><mrow><msub><mi>x</mi><mn>0</mn></msub><mo>=</mo><msub><mi>y</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">x_0=y_0</annotation></semantics></math>、<math><semantics><mrow><msub><mi>q</mi><mn>0</mn></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">q_0=1</annotation></semantics></math>，按以下公式递推。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>y</mi><mi>t</mi></msub><mo>−</mo><mfrac><mn>1</mn><mi>L</mi></mfrac><mo>∇</mo><mi>F</mi><mo stretchy="false">(</mo><msub><mi>y</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>,</mo><mspace width="2em"/><msub><mi>q</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mfrac><mrow><mn>1</mn><mo>+</mo><msqrt><mrow><mn>1</mn><mo>+</mo><mn>4</mn><msubsup><mi>q</mi><mi>t</mi><mn>2</mn></msubsup></mrow></msqrt></mrow><mn>2</mn></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">x_{t+1}=y_t-\frac1L\nabla F(y_t),\qquad
+q_{t+1}=\frac{1+\sqrt{1+4q_t^2}}2,</annotation></semantics></math></div>
+
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>β</mi><mi>t</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>q</mi><mi>t</mi></msub><mo>−</mo><mn>1</mn></mrow><mrow><msub><mi>q</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub></mrow></mfrac><mo>,</mo><mspace width="2em"/><msub><mi>y</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>β</mi><mi>t</mi></msub><mo stretchy="false">(</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>−</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>.</mo></mrow><annotation encoding="application/x-tex">\beta_t=\frac{q_t-1}{q_{t+1}},\qquad
+y_{t+1}=x_{t+1}+\beta_t(x_{t+1}-x_t).</annotation></semantics></math></div>
+
+<p>令 <math><semantics><mrow><msub><mi>z</mi><mi>t</mi></msub><mo>=</mo><msub><mi>q</mi><mi>t</mi></msub><msub><mi>y</mi><mi>t</mi></msub><mo>−</mo><mo stretchy="false">(</mo><msub><mi>q</mi><mi>t</mi></msub><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo><msub><mi>x</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">z_t=q_ty_t-(q_t-1)x_t</annotation></semantics></math>，则 <math><semantics><mrow><msub><mi>z</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>z</mi><mi>t</mi></msub><mo>−</mo><msub><mi>q</mi><mi>t</mi></msub><mo>∇</mo><mi>F</mi><mo stretchy="false">(</mo><msub><mi>y</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>/</mo><mi>L</mi></mrow><annotation encoding="application/x-tex">z_{t+1}=z_t-q_t\nabla F(y_t)/L</annotation></semantics></math>。把函数下降量与平方距离变化相加，梯度交叉项抵消。由 <math><semantics><mrow><msub><mi>q</mi><mi>t</mi></msub><mo stretchy="false">(</mo><msub><mi>q</mi><mi>t</mi></msub><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo><mo>=</mo><msubsup><mi>q</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">q_t(q_t-1)=q_{t-1}^2</annotation></semantics></math>（<math><semantics><mrow><mi>t</mi><mo>≥</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">t\ge1</annotation></semantics></math>），得到单调不增的势函数。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>Φ</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mfrac><mrow><msubsup><mi>q</mi><mi>t</mi><mn>2</mn></msubsup></mrow><mrow><mi>L</mi></mrow></mfrac><mo stretchy="false">(</mo><mi>F</mi><mo stretchy="false">(</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false">)</mo><mo>−</mo><msup><mi>F</mi><mo>⋆</mo></msup><mo stretchy="false">)</mo><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="false">‖</mo><msub><mi>z</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>−</mo><msup><mi>x</mi><mo>⋆</mo></msup><msubsup><mo stretchy="false">‖</mo><mn>2</mn><mn>2</mn></msubsup><mo>.</mo></mrow><annotation encoding="application/x-tex">\Phi_{t+1}=\frac{q_t^2}{L}(F(x_{t+1})-F^\star)+\frac{1}{2}\lVert z_{t+1}-x^\star\rVert_2^2.</annotation></semantics></math></div>
+
+<p><math><semantics><mrow><msub><mi>q</mi><mi>t</mi></msub><mo>≥</mo><mo stretchy="false">(</mo><mi>t</mi><mo>+</mo><mn>2</mn><mo stretchy="false">)</mo><mo>/</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">q_t\ge(t+2)/2</annotation></semantics></math>，因此输出点满足 <math><semantics><mrow><mi>F</mi><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>−</mo><msup><mi>F</mi><mo>⋆</mo></msup><mo>≤</mo><mn>2</mn><mi>L</mi><mo stretchy="false">‖</mo><msub><mi>x</mi><mn>0</mn></msub><mo>−</mo><msup><mi>x</mi><mo>⋆</mo></msup><msubsup><mo stretchy="false">‖</mo><mn>2</mn><mn>2</mn></msubsup><mo>/</mo><mo stretchy="false">(</mo><mi>t</mi><mo>+</mo><mn>1</mn><msup><mo stretchy="false">)</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">F(x_t)-F^\star\le 2L\lVert x_0-x^\star\rVert_2^2/(t+1)^2</annotation></semantics></math>（<math><semantics><mrow><mi>t</mi><mo>≥</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">t\ge1</annotation></semantics></math>）。</p>
+<p><span id="adaptive"></span></p>
+<h3>4. AdaGrad、RMSProp 与 Adadelta</h3>
+<p>在稀疏特征或嵌入表中，各坐标的梯度出现频率不同。自适应方法用正对角矩阵 <math><semantics><mrow><msub><mi>H</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">H_t</annotation></semantics></math> 调节每个坐标的步幅。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi mathvariant="normal">min</mi><mi>d</mi></msub><mo stretchy="false">{</mo><mo stretchy="false">⟨</mo><msub><mi>g</mi><mi>t</mi></msub><mo>,</mo><mi>d</mi><mo stretchy="false">⟩</mo><mo>+</mo><mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn><mi>η</mi></mrow></mfrac><msup><mi>d</mi><mo>⊤</mo></msup><msub><mi>H</mi><mi>t</mi></msub><mi>d</mi><mo stretchy="false">}</mo><mo>,</mo><mspace width="2em"/><mi>d</mi><mo>=</mo><mo>−</mo><mi>η</mi><msubsup><mi>H</mi><mi>t</mi><mrow><mo>−</mo><mn>1</mn></mrow></msubsup><msub><mi>g</mi><mi>t</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">\min_d \left\{\langle g_t,d\rangle+\frac{1}{2\eta}d^\top H_t d\right\},\qquad
+d=-\eta H_t^{-1}g_t,</annotation></semantics></math></div>
+
+<p>对角元素越大，该坐标的步幅越小。下文的梯度平方、除法和最大值均按坐标计算。<math><semantics><mrow><mi>ϵ</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\epsilon&gt;0</annotation></semantics></math> 用于稳定分母。</p>
+<h4>AdaGrad 累计平方梯度</h4>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>s</mi><mi>t</mi></msub><mo>=</mo><msub><mi>s</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msubsup><mi>g</mi><mi>t</mi><mn>2</mn></msubsup><mo>,</mo><mspace width="2em"/><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>x</mi><mi>t</mi></msub><mo>−</mo><mi>η</mi><mspace width=".17em"/><mfrac><mrow><msub><mi>g</mi><mi>t</mi></msub></mrow><mrow><msqrt><mrow><msub><mi>s</mi><mi>t</mi></msub><mo>+</mo><mi>ϵ</mi></mrow></msqrt></mrow></mfrac><mo>.</mo></mrow><annotation encoding="application/x-tex">s_t=s_{t-1}+g_t^2,\qquad
+x_{t+1}=x_t-\eta\,\frac{g_t}{\sqrt{s_t+\epsilon}}.</annotation></semantics></math></div>
+
+<p>若两个坐标的当前梯度均为 1，平方梯度累计量为 100 和 1，忽略 <math><semantics><mrow><mi>ϵ</mi></mrow><annotation encoding="application/x-tex">\epsilon</annotation></semantics></math> 后，步幅分别为 <math><semantics><mrow><mn>0.1</mn><mi>η</mi></mrow><annotation encoding="application/x-tex">0.1\eta</annotation></semantics></math> 和 <math><semantics><mrow><mi>η</mi></mrow><annotation encoding="application/x-tex">\eta</annotation></semantics></math>。当 <math><semantics><mrow><msub><mi>s</mi><mi>t</mi></msub><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">s_t&gt;0</annotation></semantics></math> 时，下面的不等式累加后只剩首尾，可用于推导在线凸优化的遗憾界。</p>
+<div class="math-display"><math display="block"><semantics><mrow><mfrac><mrow><msubsup><mi>g</mi><mi>t</mi><mn>2</mn></msubsup></mrow><mrow><msqrt><mrow><msub><mi>s</mi><mi>t</mi></msub></mrow></msqrt></mrow></mfrac><mo>=</mo><mfrac><mrow><msub><mi>s</mi><mi>t</mi></msub><mo>−</mo><msub><mi>s</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow><mrow><msqrt><mrow><msub><mi>s</mi><mi>t</mi></msub></mrow></msqrt></mrow></mfrac><mo>≤</mo><mn>2</mn><mo stretchy="false">(</mo><msqrt><mrow><msub><mi>s</mi><mi>t</mi></msub></mrow></msqrt><mo>−</mo><msqrt><mrow><msub><mi>s</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow></msqrt><mo stretchy="false">)</mo><mo>.</mo></mrow><annotation encoding="application/x-tex">\frac{g_t^2}{\sqrt{s_t}}
+=\frac{s_t-s_{t-1}}{\sqrt{s_t}}
+\le 2(\sqrt{s_t}-\sqrt{s_{t-1}}).</annotation></semantics></math></div>
+
+<p>累计量保留早期大梯度的影响，后续步幅因此偏小。</p>
+<h4>RMSProp 平滑平方梯度</h4>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>v</mi><mi>t</mi></msub><mo>=</mo><mi>ρ</mi><msub><mi>v</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>ρ</mi><mo stretchy="false">)</mo><msubsup><mi>g</mi><mi>t</mi><mn>2</mn></msubsup><mo>,</mo><mspace width="2em"/><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>x</mi><mi>t</mi></msub><mo>−</mo><mi>η</mi><mspace width=".17em"/><mfrac><mrow><msub><mi>g</mi><mi>t</mi></msub></mrow><mrow><msqrt><mrow><msub><mi>v</mi><mi>t</mi></msub><mo>+</mo><mi>ϵ</mi></mrow></msqrt></mrow></mfrac><mo>.</mo></mrow><annotation encoding="application/x-tex">v_t=\rho v_{t-1}+(1-\rho)g_t^2,\qquad
+x_{t+1}=x_t-\eta\,\frac{g_t}{\sqrt{v_t+\epsilon}}.</annotation></semantics></math></div>
+
+<p>当平方梯度持续低于 <math><semantics><mrow><msub><mi>v</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">v_t</annotation></semantics></math>，移动平均会下降，步长系数随之回升。记忆跨度约为 <math><semantics><mrow><mn>1</mn><mo>/</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>ρ</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">1/(1-\rho)</annotation></semantics></math> 个更新步。</p>
+<h4>Adadelta 平滑梯度与位移</h4>
+<p>用 <math><semantics><mrow><msub><mi>v</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">v_t</annotation></semantics></math> 平滑平方梯度，用 <math><semantics><mrow><msub><mi>u</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">u_t</annotation></semantics></math> 平滑平方位移。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>v</mi><mi>t</mi></msub><mo>=</mo><mi>ρ</mi><msub><mi>v</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>ρ</mi><mo stretchy="false">)</mo><msubsup><mi>g</mi><mi>t</mi><mn>2</mn></msubsup><mo>,</mo><mspace width="2em"/><msub><mi>d</mi><mi>t</mi></msub><mo>=</mo><mo>−</mo><mfrac><mrow><msqrt><mrow><msub><mi>u</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><mi>ϵ</mi></mrow></msqrt></mrow><mrow><msqrt><mrow><msub><mi>v</mi><mi>t</mi></msub><mo>+</mo><mi>ϵ</mi></mrow></msqrt></mrow></mfrac><msub><mi>g</mi><mi>t</mi></msub><mo>,</mo><mspace width="2em"/><msub><mi>u</mi><mi>t</mi></msub><mo>=</mo><mi>ρ</mi><msub><mi>u</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>ρ</mi><mo stretchy="false">)</mo><msubsup><mi>d</mi><mi>t</mi><mn>2</mn></msubsup><mo>.</mo></mrow><annotation encoding="application/x-tex">v_t=\rho v_{t-1}+(1-\rho)g_t^2,\qquad
+d_t=-\frac{\sqrt{u_{t-1}+\epsilon}}{\sqrt{v_t+\epsilon}}g_t,\qquad
+u_t=\rho u_{t-1}+(1-\rho)d_t^2.</annotation></semantics></math></div>
+
+<p>参数更新为 <math><semantics><mrow><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>x</mi><mi>t</mi></msub><mo>+</mo><msub><mi>d</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">x_{t+1}=x_t+d_t</annotation></semantics></math>。原始形式用截至上一步的位移 RMS 代替显式全局学习率。</p>
+<p><span id="adam"></span></p>
+<h3>5. Adam 及其变体</h3>
+<h4>Adam 的矩估计与偏差修正</h4>
+<p>初始化 <math><semantics><mrow><msub><mi>m</mi><mn>0</mn></msub><mo>=</mo><msub><mi>v</mi><mn>0</mn></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">m_0=v_0=0</annotation></semantics></math>，从 <math><semantics><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">t=1</annotation></semantics></math> 开始更新。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>m</mi><mi>t</mi></msub><mo>=</mo><msub><mi>β</mi><mn>1</mn></msub><msub><mi>m</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msub><mi>β</mi><mn>1</mn></msub><mo stretchy="false">)</mo><msub><mi>g</mi><mi>t</mi></msub><mo>,</mo><mspace width="2em"/><msub><mi>v</mi><mi>t</mi></msub><mo>=</mo><msub><mi>β</mi><mn>2</mn></msub><msub><mi>v</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msub><mi>β</mi><mn>2</mn></msub><mo stretchy="false">)</mo><msubsup><mi>g</mi><mi>t</mi><mn>2</mn></msubsup><mo>,</mo></mrow><annotation encoding="application/x-tex">m_t=\beta_1m_{t-1}+(1-\beta_1)g_t,\qquad
+v_t=\beta_2v_{t-1}+(1-\beta_2)g_t^2,</annotation></semantics></math></div>
+
+<div class="math-display"><math display="block"><semantics><mrow><msub><mover accent="true"><mi>m</mi><mo>^</mo></mover><mi>t</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>m</mi><mi>t</mi></msub></mrow><mrow><mn>1</mn><mo>−</mo><msubsup><mi>β</mi><mn>1</mn><mi>t</mi></msubsup></mrow></mfrac><mo>,</mo><mspace width="2em"/><msub><mover accent="true"><mi>v</mi><mo>^</mo></mover><mi>t</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>v</mi><mi>t</mi></msub></mrow><mrow><mn>1</mn><mo>−</mo><msubsup><mi>β</mi><mn>2</mn><mi>t</mi></msubsup></mrow></mfrac><mo>,</mo><mspace width="2em"/><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>x</mi><mi>t</mi></msub><mo>−</mo><msub><mi>η</mi><mi>t</mi></msub><mfrac><mrow><msub><mover accent="true"><mi>m</mi><mo>^</mo></mover><mi>t</mi></msub></mrow><mrow><msqrt><mrow><msub><mover accent="true"><mi>v</mi><mo>^</mo></mover><mi>t</mi></msub></mrow></msqrt><mo>+</mo><mi>ϵ</mi></mrow></mfrac><mo>.</mo></mrow><annotation encoding="application/x-tex">\widehat m_t=\frac{m_t}{1-\beta_1^t},\qquad
+\widehat v_t=\frac{v_t}{1-\beta_2^t},\qquad
+x_{t+1}=x_t-\eta_t\frac{\widehat m_t}{\sqrt{\widehat v_t}+\epsilon}.</annotation></semantics></math></div>
+
+<p><math><semantics><mrow><msub><mi>m</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">m_t</annotation></semantics></math> 是梯度的移动平均，<math><semantics><mrow><msub><mi>v</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">v_t</annotation></semantics></math> 是平方梯度的移动平均。若梯度恒为 <math><semantics><mrow><mi>g</mi></mrow><annotation encoding="application/x-tex">g</annotation></semantics></math>，从零初始化得到 <math><semantics><mrow><msub><mi>m</mi><mi>t</mi></msub><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msubsup><mi>β</mi><mn>1</mn><mi>t</mi></msubsup><mo stretchy="false">)</mo><mi>g</mi></mrow><annotation encoding="application/x-tex">m_t=(1-\beta_1^t)g</annotation></semantics></math>。偏差修正补回初期缺失的权重，平方梯度同理。忽略 <math><semantics><mrow><mi>ϵ</mi></mrow><annotation encoding="application/x-tex">\epsilon</annotation></semantics></math>，第一步在非零梯度坐标上的更新为 <math><semantics><mrow><mo>−</mo><msub><mi>η</mi><mn>1</mn></msub><mi mathvariant="normal">sign</mi><mo stretchy="false">(</mo><msub><mi>g</mi><mn>1</mn></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">-\eta_1\operatorname{sign}(g_1)</annotation></semantics></math>。</p>
+<h4>Nadam 的分子</h4>
+<p>Nadam 用当前梯度和修正后的动量替换 Adam 的分子 <math><semantics><mrow><msub><mover accent="true"><mi>m</mi><mo>^</mo></mover><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">\widehat m_t</annotation></semantics></math>。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>β</mi><mn>1</mn></msub><msub><mover accent="true"><mi>m</mi><mo>^</mo></mover><mi>t</mi></msub><mo>+</mo><mfrac><mrow><mn>1</mn><mo>−</mo><msub><mi>β</mi><mn>1</mn></msub></mrow><mrow><mn>1</mn><mo>−</mo><msubsup><mi>β</mi><mn>1</mn><mi>t</mi></msubsup></mrow></mfrac><msub><mi>g</mi><mi>t</mi></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">\beta_1\widehat m_t+\frac{1-\beta_1}{1-\beta_1^t}g_t.</annotation></semantics></math></div>
+
+<h4>AdaMax 的衰减最大值</h4>
+<p>分子为 <math><semantics><mrow><msub><mover accent="true"><mi>m</mi><mo>^</mo></mover><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">\widehat m_t</annotation></semantics></math>，分母改为 <math><semantics><mrow><msub><mi>u</mi><mi>t</mi></msub><mo>+</mo><mi>ϵ</mi></mrow><annotation encoding="application/x-tex">u_t+\epsilon</annotation></semantics></math>，其中 <math><semantics><mrow><msub><mi>u</mi><mi>t</mi></msub><mo>=</mo><mi mathvariant="normal">max</mi><mo stretchy="false">(</mo><msub><mi>β</mi><mn>2</mn></msub><msub><mi>u</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>,</mo><mo stretchy="false">|</mo><msub><mi>g</mi><mi>t</mi></msub><mo stretchy="false">|</mo><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">u_t=\max(\beta_2u_{t-1},\lvert g_t\rvert)</annotation></semantics></math>。某次梯度尖峰成为最大值后，其贡献每步乘 <math><semantics><mrow><msub><mi>β</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">\beta_2</annotation></semantics></math>，直到被新梯度超过。</p>
+<h4>AMSGrad 的历史最大值</h4>
+<p>Adam 的二阶矩下降时，固定学习率下的坐标步长系数会回升。AMSGrad 维护 <math><semantics><mrow><msub><mover accent="true"><mi>v</mi><mo>¯</mo></mover><mi>t</mi></msub><mo>=</mo><mi mathvariant="normal">max</mi><mo stretchy="false">(</mo><msub><mover accent="true"><mi>v</mi><mo>¯</mo></mover><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>,</mo><msub><mi>v</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\bar v_t=\max(\bar v_{t-1},v_t)</annotation></semantics></math>，用 <math><semantics><mrow><msqrt><mrow><msub><mover accent="true"><mi>v</mi><mo>¯</mo></mover><mi>t</mi></msub></mrow></msqrt></mrow><annotation encoding="application/x-tex">\sqrt{\bar v_t}</annotation></semantics></math> 定标。历史最大值单调不减，使分析可以控制跨步的度量变化。</p>
+<h4>AdamW 的解耦权重衰减</h4>
+<p>在普通 SGD 中，把 <math><semantics><mrow><mi>λ</mi><msub><mi>x</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">\lambda x_t</annotation></semantics></math> 加入梯度等价于直接将参数乘 <math><semantics><mrow><mn>1</mn><mo>−</mo><msub><mi>η</mi><mi>t</mi></msub><mi>λ</mi></mrow><annotation encoding="application/x-tex">1-\eta_t\lambda</annotation></semantics></math>。Adam 的矩估计会吸收加入梯度的正则项。AdamW 用损失梯度更新矩估计，并单独缩放参数。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msub><mi>η</mi><mi>t</mi></msub><mi>λ</mi><mo stretchy="false">)</mo><msub><mi>x</mi><mi>t</mi></msub><mo>−</mo><msub><mi>η</mi><mi>t</mi></msub><mfrac><mrow><msub><mover accent="true"><mi>m</mi><mo>^</mo></mover><mi>t</mi></msub></mrow><mrow><msqrt><mrow><msub><mover accent="true"><mi>v</mi><mo>^</mo></mover><mi>t</mi></msub></mrow></msqrt><mo>+</mo><mi>ϵ</mi></mrow></mfrac><mo>.</mo></mrow><annotation encoding="application/x-tex">x_{t+1}=(1-\eta_t\lambda)x_t-\eta_t\frac{\widehat m_t}{\sqrt{\widehat v_t}+\epsilon}.</annotation></semantics></math></div>
+
+<p><span id="lab"></span></p>
+<h3>6. 二维二次函数实验</h3><section class="lab classical" aria-label="交互实验：比较三种更新的函数值">
+ <p>起点为 (4, 1)，Heavy-ball 动量为 0.8。选择步长与迭代次数，查看函数值。</p>
+ <div class="lab-controls">
+  <div>
+   <label for="learning-rate">共同步长</label>
+   <select id="learning-rate"><option value="0.005">0.005</option><option value="0.01" selected>0.010 = 1/L</option><option value="0.015">0.015</option></select>
+  </div>
+  <div>
+   <label for="iteration">读取第 <output id="step-value" for="iteration">40</output> 步</label>
+   <input type="range" id="iteration" min="0" max="80" step="1" value="40">
+  </div>
+ </div>
+ <div class="lab-legend" aria-live="polite">
+  <span class="gd"><i></i>GD <output id="gd-loss"></output></span>
+  <span class="hb"><i></i>Heavy-ball <output id="hb-loss"></output></span>
+  <span class="nag"><i></i>Nesterov <output id="nag-loss"></output></span>
+ </div>
+ <svg id="loss-chart" viewBox="0 0 630 276" role="img" aria-label="三种算法的函数值对迭代次数曲线，纵轴为对数刻度"></svg>
+</section>
+
+<p>在第 1 节的二次函数上，三种方法都从 <math><semantics><mrow><mo stretchy="false">(</mo><mn>4</mn><mo>,</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(4,1)</annotation></semantics></math> 出发，取 <math><semantics><mrow><mi>η</mi><mo>=</mo><mn>1</mn><mo>/</mo><mn>100</mn></mrow><annotation encoding="application/x-tex">\eta=1/100</annotation></semantics></math>。Heavy-ball 取 <math><semantics><mrow><mi>γ</mi><mo>=</mo><mn>0.8</mn></mrow><annotation encoding="application/x-tex">\gamma=0.8</annotation></semantics></math>，Nesterov 用第 3 节的调度。代码输出各方法的迭代坐标和函数值。</p>
+<pre><code class="language-python">from math import sqrt
+
+
+def loss(x):
+    return 0.5 * (x[0] ** 2 + 100 * x[1] ** 2)
+
+
+def trace(method, steps=80, eta=0.01, gamma=0.8):
+    x = prev = y = (4.0, 1.0)
+    q = 1.0
+    yield x
+    for _ in range(steps):
+        query = y if method == &quot;Nesterov&quot; else x
+        g = (query[0], 100 * query[1])
+        nxt = tuple(query[j] - eta * g[j] for j in range(2))
+        if method == &quot;Heavy-ball&quot;:
+            nxt = tuple(nxt[j] + gamma * (x[j] - prev[j]) for j in range(2))
+        if method == &quot;Nesterov&quot;:
+            q_next = (1 + sqrt(1 + 4 * q * q)) / 2
+            beta = (q - 1) / q_next
+            y = tuple(nxt[j] + beta * (nxt[j] - x[j]) for j in range(2))
+            q = q_next
+        prev, x = x, nxt
+        yield x
+
+
+for name in (&quot;GD&quot;, &quot;Heavy-ball&quot;, &quot;Nesterov&quot;):
+    history = list(trace(name))
+    for t in (1, 10, 40, 80):
+        a, b = history[t]
+        print(f&quot;{name:10s} step={t:2d} x=({a:+.4f}, {b:+.4f}) F={loss(history[t]):.6f}&quot;)
+</code></pre>
+<p>步长为 0.010 时，GD 第一步将高曲率坐标归零，低曲率坐标每步乘 0.99。Heavy-ball 第一步也将高曲率坐标归零，第二步受动量影响越过零点。步长改为 0.015 后，GD 收敛，这套 Nesterov 递推发散。</p>
+<p><span id="part-2"></span></p>
+<h2>第二部分 · EMA 与 Nesterov 外推</h2>
+<p><strong>从指数移动平均到参数外推</strong></p>
+<p>指数移动平均（Exponential Moving Average，EMA）用一个递推值平滑连续观测。每来一个新值，就把它与上一次的平均值按比例混合。第一篇的 Adam 用它平滑梯度，EMA-Nesterov 用它平滑参数位移。</p>
+<p><span id="ema"></span></p>
+<h3>1. 什么是 EMA</h3>
+<p>设 <math><semantics><mrow><msub><mi>z</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">z_t</annotation></semantics></math> 是第 <math><semantics><mrow><mi>t</mi></mrow><annotation encoding="application/x-tex">t</annotation></semantics></math> 次观测，<math><semantics><mrow><msub><mi>s</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">s_t</annotation></semantics></math> 是平滑后的值。给定初值 <math><semantics><mrow><msub><mi>s</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">s_0</annotation></semantics></math> 和平滑系数 <math><semantics><mrow><mn>0</mn><mo>≤</mo><mi>γ</mi><mo>&lt;</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">0\le\gamma&lt;1</annotation></semantics></math>，每次更新为</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>s</mi><mi>t</mi></msub><mo>=</mo><mi>γ</mi><msub><mi>s</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>γ</mi><mo stretchy="false">)</mo><msub><mi>z</mi><mi>t</mi></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">s_t=\gamma s_{t-1}+(1-\gamma)z_t.</annotation></semantics></math></div>
+
+<p>例如，取 <math><semantics><mrow><mi>γ</mi><mo>=</mo><mn>0.8</mn></mrow><annotation encoding="application/x-tex">\gamma=0.8</annotation></semantics></math>、<math><semantics><mrow><msub><mi>s</mi><mn>0</mn></msub><mo>=</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">s_0=10</annotation></semantics></math>。观测先到 15，再到 5。EMA 先更新为 <math><semantics><mrow><mn>0.8</mn><mo>×</mo><mn>10</mn><mo>+</mo><mn>0.2</mn><mo>×</mo><mn>15</mn><mo>=</mo><mn>11</mn></mrow><annotation encoding="application/x-tex">0.8\times10+0.2\times15=11</annotation></semantics></math>，再更新为 <math><semantics><mrow><mn>0.8</mn><mo>×</mo><mn>11</mn><mo>+</mo><mn>0.2</mn><mo>×</mo><mn>5</mn><mo>=</mo><mn>9.8</mn></mrow><annotation encoding="application/x-tex">0.8\times11+0.2\times5=9.8</annotation></semantics></math>。</p>
+<p>展开递推可以看到每个历史观测的权重。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>s</mi><mi>t</mi></msub><mo>=</mo><msup><mi>γ</mi><mi>t</mi></msup><msub><mi>s</mi><mn>0</mn></msub><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>γ</mi><mo stretchy="false">)</mo><msubsup><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mrow><mi>t</mi></mrow></msubsup><msup><mi>γ</mi><mrow><mi>t</mi><mo>−</mo><mi>j</mi></mrow></msup><msub><mi>z</mi><mi>j</mi></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">s_t=\gamma^t s_0+(1-\gamma)\sum_{j=1}^{t}\gamma^{t-j}z_j.</annotation></semantics></math></div>
+
+<p>简单移动平均对窗口内的观测赋予相同权重。EMA 中观测每早一步，权重就再乘一次 <math><semantics><mrow><mi>γ</mi></mrow><annotation encoding="application/x-tex">\gamma</annotation></semantics></math>。<math><semantics><mrow><mi>γ</mi><mo>=</mo><mn>0.8</mn></mrow><annotation encoding="application/x-tex">\gamma=0.8</annotation></semantics></math> 时，最近三次观测的权重分别是 0.20、0.16 和 0.128。每次更新只需保存上一次的平均值。</p>
+<h4>平滑与滞后</h4>
+<p><math><semantics><mrow><mi>γ</mi></mrow><annotation encoding="application/x-tex">\gamma</annotation></semantics></math> 越大，新观测的权重越小，曲线越平滑，跟随趋势变化也越慢。若观测在 <math><semantics><mrow><mo>+</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">+a</annotation></semantics></math> 和 <math><semantics><mrow><mo>−</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">-a</annotation></semantics></math> 之间交替，稳态下 EMA 的振幅为原来的 <math><semantics><mrow><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>γ</mi><mo stretchy="false">)</mo><mo>/</mo><mo stretchy="false">(</mo><mn>1</mn><mo>+</mo><mi>γ</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(1-\gamma)/(1+\gamma)</annotation></semantics></math>。按稳态权重计算，历史观测平均距今 <math><semantics><mrow><mi>γ</mi><mo>/</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>γ</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\gamma/(1-\gamma)</annotation></semantics></math> 步。<math><semantics><mrow><mi>γ</mi><mo>=</mo><mn>0.995</mn></mrow><annotation encoding="application/x-tex">\gamma=0.995</annotation></semantics></math> 时，这个平均距离是 199 步。</p>
+<p><section class="lab classical ema-lab" id="ema-lab" aria-label="EMA 平滑实验">
+ <p>模拟位移在第 250 步改变方向。拖动滑块，观察振荡幅度和转向延迟。</p>
+ <label for="ema-gamma">平滑系数 γ <output id="gamma-value" for="ema-gamma">0.980</output></label>
+ <input type="range" id="ema-gamma" min="0.8" max="0.995" step="0.005" value="0.980">
+ <p>历史观测平均距今 <output id="mean-age" for="ema-gamma">49</output> 步 · 交替振荡保留 <output id="oscillation" for="ema-gamma">1.01%</output></p>
+ <div class="legend"><span>灰色：模拟位移</span> · <em>橙色虚线：位移趋势</em> · <b>绿色：EMA</b></div>
+ <canvas id="ema-plot" role="img" aria-label="模拟位移、趋势与 EMA 随更新步数变化的曲线">模拟位移在第 250 步从正趋势变为负趋势，EMA 随平滑系数改变转向速度。</canvas>
+</section>
+<span id="lookahead-methods"></span></p>
+<h3>2. Nesterov 与其他外推方法</h3>
+<h4>经典 Nesterov：在外推点求梯度</h4>
+<p>记 <math><semantics><mrow><msub><mi>d</mi><mi>t</mi></msub><mo>=</mo><msub><mi>x</mi><mi>t</mi></msub><mo>−</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">d_t=x_t-x_{t-1}</annotation></semantics></math>。重球动量在 <math><semantics><mrow><msub><mi>x</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">x_t</annotation></semantics></math> 求梯度，再加上位移项 <math><semantics><mrow><msub><mi>β</mi><mi>t</mi></msub><msub><mi>d</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">\beta_t d_t</annotation></semantics></math>。Nesterov 先沿位移外推，再在 <math><semantics><mrow><msub><mi>y</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">y_t</annotation></semantics></math> 求梯度。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>y</mi><mi>t</mi></msub><mo>=</mo><msub><mi>x</mi><mi>t</mi></msub><mo>+</mo><msub><mi>β</mi><mi>t</mi></msub><msub><mi>d</mi><mi>t</mi></msub><mo>,</mo><mspace width="2em"/><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>y</mi><mi>t</mi></msub><mo>−</mo><msub><mi>h</mi><mi>t</mi></msub><mo>∇</mo><mi>f</mi><mo stretchy="false">(</mo><msub><mi>y</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>.</mo></mrow><annotation encoding="application/x-tex">y_t=x_t+\beta_t d_t,\qquad x_{t+1}=y_t-h_t\nabla f(y_t).</annotation></semantics></math></div>
+
+<p>对 <math><semantics><mrow><mi>L</mi></mrow><annotation encoding="application/x-tex">L</annotation></semantics></math>-光滑凸目标，取精确梯度、<math><semantics><mrow><msub><mi>h</mi><mi>t</mi></msub><mo>=</mo><mn>1</mn><mo>/</mo><mi>L</mi></mrow><annotation encoding="application/x-tex">h_t=1/L</annotation></semantics></math> 和 <math><semantics><mrow><msub><mi>β</mi><mi>t</mi></msub><mo>=</mo><mi>t</mi><mo>/</mo><mo stretchy="false">(</mo><mi>t</mi><mo>+</mo><mn>3</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\beta_t=t/(t+3)</annotation></semantics></math>，函数差上界为 <math><semantics><mrow><mi>O</mi><mo stretchy="false">(</mo><msup><mi>T</mi><mrow><mo>−</mo><mn>2</mn></mrow></msup><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">O(T^{-2})</annotation></semantics></math>。在小批量训练中，外推会把单步位移中的振荡带进查询点。</p>
+<h4>Lookahead：对内循环的起点和终点做插值</h4>
+<p>从慢参数 <math><semantics><mrow><msub><mi>ϕ</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">\phi_{t-1}</annotation></semantics></math> 出发，基础优化器连续走 <math><semantics><mrow><mi>K</mi></mrow><annotation encoding="application/x-tex">K</annotation></semantics></math> 步，到达快参数 <math><semantics><mrow><msub><mi>θ</mi><mrow><mi>t</mi><mo>,</mo><mi>K</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\theta_{t,K}</annotation></semantics></math>。再更新慢参数。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>ϕ</mi><mi>t</mi></msub><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>a</mi><mo stretchy="false">)</mo><msub><mi>ϕ</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><mi>a</mi><msub><mi>θ</mi><mrow><mi>t</mi><mo>,</mo><mi>K</mi></mrow></msub><mo>,</mo><mspace width="2em"/><mn>0</mn><mo>&lt;</mo><mi>a</mi><mo>&lt;</mo><mn>1</mn><mo>.</mo></mrow><annotation encoding="application/x-tex">\phi_t=(1-a)\phi_{t-1}+a\theta_{t,K},\qquad 0&lt;a&lt;1.</annotation></semantics></math></div>
+
+<p>新慢参数位于起点和终点之间，并作为下一轮的起点。<math><semantics><mrow><mi>K</mi></mrow><annotation encoding="application/x-tex">K</annotation></semantics></math> 步的位移之和决定慢参数的更新方向。</p>
+<h4>NALA：内循环结束后再做一次梯度更新</h4>
+<p>从 <math><semantics><mrow><msub><mi>ϕ</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">\phi_{t-1}</annotation></semantics></math> 运行 <math><semantics><mrow><mi>K</mi></mrow><annotation encoding="application/x-tex">K</annotation></semantics></math> 步，得到快参数 <math><semantics><mrow><msub><mi>θ</mi><mrow><mi>t</mi><mo>,</mo><mi>K</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\theta_{t,K}</annotation></semantics></math>。用整段位移构造查询点 <math><semantics><mrow><msub><mi>y</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">y_t</annotation></semantics></math>，再做一次外层梯度更新。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>y</mi><mi>t</mi></msub><mo>=</mo><msub><mi>θ</mi><mrow><mi>t</mi><mo>,</mo><mi>K</mi></mrow></msub><mo>+</mo><msub><mi>μ</mi><mi>N</mi></msub><mo stretchy="false">(</mo><msub><mi>θ</mi><mrow><mi>t</mi><mo>,</mo><mi>K</mi></mrow></msub><mo>−</mo><msub><mi>ϕ</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false">)</mo><mo>,</mo><mspace width="2em"/><msub><mi>ϕ</mi><mi>t</mi></msub><mo>=</mo><msub><mi>y</mi><mi>t</mi></msub><mo>−</mo><mi>a</mi><mo>∇</mo><mi>f</mi><mo stretchy="false">(</mo><msub><mi>y</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>.</mo></mrow><annotation encoding="application/x-tex">y_t=\theta_{t,K}+\mu_N(\theta_{t,K}-\phi_{t-1}),\qquad
+\phi_t=y_t-a\nabla f(y_t).</annotation></semantics></math></div>
+
+<p><math><semantics><mrow><msub><mi>μ</mi><mi>N</mi></msub><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\mu_N&gt;0</annotation></semantics></math> 时，查询点越过终点。<math><semantics><mrow><mo>−</mo><mn>1</mn><mo>&lt;</mo><msub><mi>μ</mi><mi>N</mi></msub><mo>&lt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">-1&lt;\mu_N&lt;0</annotation></semantics></math> 时，查询点位于起点和终点之间。NALA 实验采用的 <math><semantics><mrow><msub><mi>μ</mi><mi>N</mi></msub><mo>=</mo><mo>−</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">\mu_N=-0.5</annotation></semantics></math> 对应中点。</p>
+<h4>SNOO：对每段内循环的位移加动量</h4>
+<p>令 <math><semantics><mrow><msub><mi>F</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">F_t</annotation></semantics></math> 表示连续 <math><semantics><mrow><mi>K</mi></mrow><annotation encoding="application/x-tex">K</annotation></semantics></math> 次基础更新。由外层参数 <math><semantics><mrow><msub><mi>w</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">w_t</annotation></semantics></math> 出发，内循环终点为 <math><semantics><mrow><msub><mi>u</mi><mi>t</mi></msub><mo>=</mo><msub><mi>F</mi><mi>t</mi></msub><mo stretchy="false">(</mo><msub><mi>w</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">u_t=F_t(w_t)</annotation></semantics></math>，伪梯度 <math><semantics><mrow><msub><mi>s</mi><mi>t</mi></msub><mo>=</mo><msub><mi>w</mi><mi>t</mi></msub><mo>−</mo><msub><mi>u</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">s_t=w_t-u_t</annotation></semantics></math>。初始化 <math><semantics><mrow><msub><mi>b</mi><mrow><mo>−</mo><mn>1</mn></mrow></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">b_{-1}=0</annotation></semantics></math>，每段更新一次外层动量。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>b</mi><mi>t</mi></msub><mo>=</mo><mi>μ</mi><msub><mi>b</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>s</mi><mi>t</mi></msub><mo>,</mo><mspace width="2em"/><msub><mi>w</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>w</mi><mi>t</mi></msub><mo>−</mo><mi>η</mi><mo stretchy="false">(</mo><msub><mi>s</mi><mi>t</mi></msub><mo>+</mo><mi>μ</mi><msub><mi>b</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>.</mo></mrow><annotation encoding="application/x-tex">b_t=\mu b_{t-1}+s_t,\qquad
+w_{t+1}=w_t-\eta(s_t+\mu b_t).</annotation></semantics></math></div>
+
+<p>当 <math><semantics><mrow><mi>μ</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\mu=0</annotation></semantics></math>，外层更新化为 Lookahead 的插值。令 <math><semantics><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>=</mo><msub><mi>w</mi><mi>t</mi></msub><mo>+</mo><mi>η</mi><mi>μ</mi><msub><mi>b</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">x_t=w_t+\eta\mu b_{t-1}</annotation></semantics></math>、<math><semantics><mrow><msub><mi>y</mi><mi>t</mi></msub><mo>=</mo><msub><mi>w</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">y_t=w_t</annotation></semantics></math>，得到 <math><semantics><mrow><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>−</mo><msub><mi>x</mi><mi>t</mi></msub><mo>=</mo><mo>−</mo><mi>η</mi><msub><mi>b</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">x_{t+1}-x_t=-\eta b_t</annotation></semantics></math>，于是</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>y</mi><mi>t</mi></msub><mo>=</mo><msub><mi>x</mi><mi>t</mi></msub><mo>+</mo><mi>μ</mi><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>−</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false">)</mo><mo>,</mo><mspace width="2em"/><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>η</mi><mo stretchy="false">)</mo><msub><mi>y</mi><mi>t</mi></msub><mo>+</mo><mi>η</mi><msub><mi>F</mi><mi>t</mi></msub><mo stretchy="false">(</mo><msub><mi>y</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">y_t=x_t+\mu(x_t-x_{t-1}),\qquad
+x_{t+1}=(1-\eta)y_t+\eta F_t(y_t),</annotation></semantics></math></div>
+
+<p>其中 <math><semantics><mrow><msub><mi>x</mi><mrow><mo>−</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>x</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">x_{-1}=x_0</annotation></semantics></math>。内循环从外推点 <math><semantics><mrow><msub><mi>y</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">y_t</annotation></semantics></math> 开始，原始外层参数为 <math><semantics><mrow><msub><mi>w</mi><mi>t</mi></msub><mo>=</mo><msub><mi>y</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">w_t=y_t</annotation></semantics></math>。</p>
+<h4>GPA：分别控制梯度查询点和评估参数</h4>
+<p>广义原始平均（Generalized Primal Averaging，GPA）维护三组参数。<math><semantics><mrow><msub><mi>z</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">z_t</annotation></semantics></math> 接收基础更新，<math><semantics><mrow><msub><mi>x</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">x_t</annotation></semantics></math> 平滑历次参数位置并用于评估，<math><semantics><mrow><msub><mi>y</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">y_t</annotation></semantics></math> 用于计算梯度。以 SGD 为基础更新，初始化 <math><semantics><mrow><msub><mi>x</mi><mn>0</mn></msub><mo>=</mo><msub><mi>z</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">x_0=z_0</annotation></semantics></math>。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>y</mi><mi>t</mi></msub><mo>=</mo><msub><mi>μ</mi><mi>y</mi></msub><msub><mi>x</mi><mi>t</mi></msub><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msub><mi>μ</mi><mi>y</mi></msub><mo stretchy="false">)</mo><msub><mi>z</mi><mi>t</mi></msub><mo>,</mo><mspace width="2em"/><msub><mi>z</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>z</mi><mi>t</mi></msub><mo>−</mo><msub><mi>h</mi><mi>t</mi></msub><msub><mi>g</mi><mi>t</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">y_t=\mu_y x_t+(1-\mu_y)z_t,\qquad
+z_{t+1}=z_t-h_t g_t,</annotation></semantics></math></div>
+
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>μ</mi><mi>x</mi></msub><msub><mi>x</mi><mi>t</mi></msub><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msub><mi>μ</mi><mi>x</mi></msub><mo stretchy="false">)</mo><msub><mi>z</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>,</mo><mspace width="2em"/><msub><mi>g</mi><mi>t</mi></msub><mo>=</mo><mo>∇</mo><mi>f</mi><mo stretchy="false">(</mo><msub><mi>y</mi><mi>t</mi></msub><mo>;</mo><msub><mi>ξ</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>.</mo></mrow><annotation encoding="application/x-tex">x_{t+1}=\mu_x x_t+(1-\mu_x)z_{t+1},\qquad
+g_t=\nabla f(y_t;\xi_t).</annotation></semantics></math></div>
+
+<p><math><semantics><mrow><msub><mi>μ</mi><mi>x</mi></msub></mrow><annotation encoding="application/x-tex">\mu_x</annotation></semantics></math> 控制评估参数的平滑程度，<math><semantics><mrow><msub><mi>μ</mi><mi>y</mi></msub></mrow><annotation encoding="application/x-tex">\mu_y</annotation></semantics></math> 控制查询点的位置。两者相等时，得到Nesterov 的原始平均形式。将上式代入查询点的差，可得</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>y</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>−</mo><msub><mi>y</mi><mi>t</mi></msub><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msub><mi>μ</mi><mi>y</mi></msub><mo stretchy="false">)</mo><mo stretchy="false">(</mo><msub><mi>z</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>−</mo><msub><mi>z</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>+</mo><msub><mi>μ</mi><mi>y</mi></msub><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msub><mi>μ</mi><mi>x</mi></msub><mo stretchy="false">)</mo><mo stretchy="false">(</mo><msub><mi>z</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>−</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>.</mo></mrow><annotation encoding="application/x-tex">y_{t+1}-y_t=(1-\mu_y)(z_{t+1}-z_t)+\mu_y(1-\mu_x)(z_{t+1}-x_t).</annotation></semantics></math></div>
+
+<p>第一项来自最近一步更新，第二项来自新参数与历史平均值的距离。</p>
+<p><span id="update"></span></p>
+<h3>3. EMA-Nesterov 的更新规则</h3>
+<p>EMA-Nesterov 把每步位移 <math><semantics><mrow><msub><mi>d</mi><mi>t</mi></msub><mo>=</mo><msub><mi>x</mi><mi>t</mi></msub><mo>−</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow><annotation encoding="application/x-tex">d_t=x_t-x_{t-1}</annotation></semantics></math> 作为 EMA 的输入，用平滑位移 <math><semantics><mrow><msub><mi>m</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">m_t</annotation></semantics></math> 构造外推点。</p>
+<p>初始化 <math><semantics><mrow><msub><mi>m</mi><mn>0</mn></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">m_0=0</annotation></semantics></math>。设 <math><semantics><mrow><msub><mi mathvariant="normal">𝒜</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">\mathcal A_t</annotation></semantics></math> 为基础优化器的一次更新，<math><semantics><mrow><mi>γ</mi><mo>∈</mo><mo stretchy="false">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\gamma\in[0,1)</annotation></semantics></math> 为平滑系数，<math><semantics><mrow><msub><mi>β</mi><mi>t</mi></msub><mo>≥</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\beta_t\ge 0</annotation></semantics></math> 为外推系数。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>y</mi><mi>t</mi></msub><mo>=</mo><msub><mi>x</mi><mi>t</mi></msub><mo>+</mo><msub><mi>β</mi><mi>t</mi></msub><msub><mi>m</mi><mi>t</mi></msub><mo>,</mo><mspace width="2em"/><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi mathvariant="normal">𝒜</mi><mi>t</mi></msub><mo stretchy="false">(</mo><msub><mi>y</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">y_t=x_t+\beta_t m_t,\qquad x_{t+1}=\mathcal A_t(y_t),</annotation></semantics></math></div>
+
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>m</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mi>γ</mi><msub><mi>m</mi><mi>t</mi></msub><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>γ</mi><mo stretchy="false">)</mo><mo stretchy="false">(</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>−</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>.</mo></mrow><annotation encoding="application/x-tex">m_{t+1}=\gamma m_t+(1-\gamma)(x_{t+1}-x_t).</annotation></semantics></math></div>
+
+<p>基础优化器在 <math><semantics><mrow><msub><mi>y</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">y_t</annotation></semantics></math> 计算梯度，沿用自己的状态。以 SGD 为例，更新 EMA 的参数位移由外推项和梯度步相加得到。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>−</mo><msub><mi>x</mi><mi>t</mi></msub><mo>=</mo><msub><mi>β</mi><mi>t</mi></msub><msub><mi>m</mi><mi>t</mi></msub><mo>−</mo><msub><mi>α</mi><mi>t</mi></msub><mo>∇</mo><mi>f</mi><mo stretchy="false">(</mo><msub><mi>y</mi><mi>t</mi></msub><mo>;</mo><msub><mi>ξ</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>.</mo></mrow><annotation encoding="application/x-tex">x_{t+1}-x_t=\beta_t m_t-\alpha_t\nabla f(y_t;\xi_t).</annotation></semantics></math></div>
+
+<p>当 <math><semantics><mrow><mi>γ</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\gamma=0</annotation></semantics></math>，<math><semantics><mrow><msub><mi>m</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">m_t</annotation></semantics></math> 就是最近一步位移。当 <math><semantics><mrow><msub><mi>β</mi><mi>t</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\beta_t=0</annotation></semantics></math>，该步从 <math><semantics><mrow><msub><mi>x</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">x_t</annotation></semantics></math> 执行基础更新，同时记录新位移。</p>
+<p><span id="convergence"></span></p>
+<h3>4. 凸优化收敛率</h3>
+<p>两条定理都取精确梯度和基础步长 <math><semantics><mrow><mn>1</mn><mo>/</mo><mi>L</mi></mrow><annotation encoding="application/x-tex">1/L</annotation></semantics></math>，即 <math><semantics><mrow><mi mathvariant="normal">𝒜</mi><mo stretchy="false">(</mo><mi>y</mi><mo stretchy="false">)</mo><mo>=</mo><mi>y</mi><mo>−</mo><mo>∇</mo><mi>f</mi><mo stretchy="false">(</mo><mi>y</mi><mo stretchy="false">)</mo><mo>/</mo><mi>L</mi></mrow><annotation encoding="application/x-tex">\mathcal A(y)=y-\nabla f(y)/L</annotation></semantics></math>。记最优点为 <math><semantics><mrow><msup><mi>x</mi><mo>⋆</mo></msup></mrow><annotation encoding="application/x-tex">x^\star</annotation></semantics></math>，最优值为 <math><semantics><mrow><msup><mi>f</mi><mo>⋆</mo></msup></mrow><annotation encoding="application/x-tex">f^\star</annotation></semantics></math>。</p>
+<h4>强凸目标</h4>
+<p>设 <math><semantics><mrow><mi>f</mi></mrow><annotation encoding="application/x-tex">f</annotation></semantics></math> 为 <math><semantics><mrow><mi>L</mi></mrow><annotation encoding="application/x-tex">L</annotation></semantics></math>-光滑、<math><semantics><mrow><mi>μ</mi></mrow><annotation encoding="application/x-tex">\mu</annotation></semantics></math>-强凸，<math><semantics><mrow><mi>κ</mi><mo>=</mo><mi>L</mi><mo>/</mo><mi>μ</mi><mo>&gt;</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\kappa=L/\mu&gt;1</annotation></semantics></math>。取 <math><semantics><mrow><mn>0</mn><mo>≤</mo><mi>γ</mi><mo>&lt;</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>/</mo><mi>κ</mi></mrow><annotation encoding="application/x-tex">0\le\gamma&lt;1-1/\kappa</annotation></semantics></math>，并设</p>
+<div class="math-display"><math display="block"><semantics><mrow><mi>r</mi><mo>=</mo><msqrt><mrow><mfrac><mrow><mn>1</mn><mo>−</mo><mi>γ</mi></mrow><mrow><mi>κ</mi></mrow></mfrac></mrow></msqrt><mo>,</mo><mspace width="2em"/><msub><mi>β</mi><mi>t</mi></msub><mo>=</mo><mfrac><mrow><mo stretchy="false">(</mo><msqrt><mrow><mn>1</mn><mo>−</mo><mi>γ</mi></mrow></msqrt><mo>−</mo><msqrt><mrow><mn>1</mn><mo>/</mo><mi>κ</mi></mrow></msqrt><msup><mo stretchy="false">)</mo><mn>2</mn></msup></mrow><mrow><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>γ</mi><mo stretchy="false">)</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mn>1</mn><mo>/</mo><mi>κ</mi><mo stretchy="false">)</mo></mrow></mfrac><mo>.</mo></mrow><annotation encoding="application/x-tex">r=\sqrt{\frac{1-\gamma}{\kappa}},\qquad
+\beta_t=\frac{(\sqrt{1-\gamma}-\sqrt{1/\kappa})^2}{(1-\gamma)(1-1/\kappa)}.</annotation></semantics></math></div>
+
+<p>令 <math><semantics><mrow><msub><mi>v</mi><mi>t</mi></msub><mo>=</mo><msub><mi>x</mi><mi>t</mi></msub><mo>+</mo><mfrac><mrow><mn>1</mn><mo>−</mo><mi>γ</mi><mo>−</mo><mi>r</mi></mrow><mrow><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>γ</mi><mo stretchy="false">)</mo><mi>r</mi></mrow></mfrac><msub><mi>m</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">v_t=x_t+\frac{1-\gamma-r}{(1-\gamma)r}m_t</annotation></semantics></math>。势函数 <math><semantics><mrow><msub><mi>E</mi><mi>t</mi></msub><mo>=</mo><mi>f</mi><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>−</mo><msup><mi>f</mi><mo>⋆</mo></msup><mo>+</mo><mfrac><mrow><mi>μ</mi></mrow><mrow><mn>2</mn></mrow></mfrac><mo stretchy="false">‖</mo><msub><mi>v</mi><mi>t</mi></msub><mo>−</mo><msup><mi>x</mi><mo>⋆</mo></msup><msubsup><mo stretchy="false">‖</mo><mn>2</mn><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">E_t=f(x_t)-f^\star+\frac{\mu}{2}\lVert v_t-x^\star\rVert_2^2</annotation></semantics></math> 满足 <math><semantics><mrow><msub><mi>E</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>≤</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>r</mi><mo stretchy="false">)</mo><msub><mi>E</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">E_{t+1}\le(1-r)E_t</annotation></semantics></math>，因此</p>
+<div class="math-display"><math display="block"><semantics><mrow><mi>f</mi><mo stretchy="false">(</mo><msub><mi>x</mi><mi>T</mi></msub><mo stretchy="false">)</mo><mo>−</mo><msup><mi>f</mi><mo>⋆</mo></msup><mo>≤</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>r</mi><msup><mo stretchy="false">)</mo><mi>T</mi></msup><msub><mi>E</mi><mn>0</mn></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">f(x_T)-f^\star\le (1-r)^T E_0.</annotation></semantics></math></div>
+
+<p><math><semantics><mrow><mi>γ</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\gamma=0</annotation></semantics></math> 给出经典 Nesterov 的收缩因子 <math><semantics><mrow><mn>1</mn><mo>−</mo><mn>1</mn><mo>/</mo><msqrt><mrow><mi>κ</mi></mrow></msqrt></mrow><annotation encoding="application/x-tex">1-1/\sqrt{\kappa}</annotation></semantics></math>。增大 <math><semantics><mrow><mi>γ</mi></mrow><annotation encoding="application/x-tex">\gamma</annotation></semantics></math> 会使上界收缩得更慢。</p>
+<h4>一般凸目标</h4>
+<p>设 <math><semantics><mrow><mi>f</mi></mrow><annotation encoding="application/x-tex">f</annotation></semantics></math> 为 <math><semantics><mrow><mi>L</mi></mrow><annotation encoding="application/x-tex">L</annotation></semantics></math>-光滑凸函数，<math><semantics><mrow><mn>0</mn><mo>≤</mo><mi>γ</mi><mo>&lt;</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">0\le\gamma&lt;1</annotation></semantics></math>。取</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>c</mi><mi>t</mi></msub><mo>=</mo><mn>1</mn><mo>+</mo><mfrac><mrow><mi>γ</mi></mrow><mrow><mn>4</mn><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>γ</mi><mo stretchy="false">)</mo></mrow></mfrac><mo>+</mo><mfrac><mrow><mi>t</mi></mrow><mrow><mn>4</mn></mrow></mfrac><mo>,</mo><mspace width="2em"/><msub><mi>β</mi><mi>t</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>c</mi><mi>t</mi></msub><mo>−</mo><mi>γ</mi><msub><mi>c</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub></mrow><mrow><mn>1</mn><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>γ</mi><mo stretchy="false">)</mo><msub><mi>c</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub></mrow></mfrac><mo>.</mo></mrow><annotation encoding="application/x-tex">c_t=1+\frac{\gamma}{4(1-\gamma)}+\frac{t}{4},\qquad
+\beta_t=\frac{c_t-\gamma c_{t+1}}{1+(1-\gamma)c_{t+1}}.</annotation></semantics></math></div>
+
+<p>证明将函数差与辅助点 <math><semantics><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>+</mo><msub><mi>c</mi><mi>t</mi></msub><msub><mi>m</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">x_t+c_t m_t</annotation></semantics></math> 的平方距离合成势函数。函数差的权重随 <math><semantics><mrow><msup><mi>t</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">t^2</annotation></semantics></math> 增长，得到</p>
+<div class="math-display"><math display="block"><semantics><mrow><mi>f</mi><mo stretchy="false">(</mo><msub><mi>x</mi><mi>T</mi></msub><mo stretchy="false">)</mo><mo>−</mo><msup><mi>f</mi><mo>⋆</mo></msup><mo>≤</mo><mfrac><mrow><mn>97</mn><mi>L</mi><mo stretchy="false">‖</mo><msub><mi>x</mi><mn>0</mn></msub><mo>−</mo><msup><mi>x</mi><mo>⋆</mo></msup><msubsup><mo stretchy="false">‖</mo><mn>2</mn><mn>2</mn></msubsup></mrow><mrow><mn>2</mn><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>γ</mi><msup><mo stretchy="false">)</mo><mn>3</mn></msup><msup><mi>T</mi><mn>2</mn></msup></mrow></mfrac><mo>.</mo></mrow><annotation encoding="application/x-tex">f(x_T)-f^\star
+\le\frac{97L\lVert x_0-x^\star\rVert_2^2}{2(1-\gamma)^3 T^2}.</annotation></semantics></math></div>
+
+<p>对固定 <math><semantics><mrow><mi>γ</mi></mrow><annotation encoding="application/x-tex">\gamma</annotation></semantics></math>，函数差按 <math><semantics><mrow><msup><mi>T</mi><mrow><mo>−</mo><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">T^{-2}</annotation></semantics></math> 衰减。上界的系数随 <math><semantics><mrow><mi>γ</mi></mrow><annotation encoding="application/x-tex">\gamma</annotation></semantics></math> 接近 1 而增大。</p>
+<p><span id="schedule"></span></p>
+<h3>5. 训练中的外推调度</h3>
+<p>令 <math><semantics><mrow><msub><mi>α</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">\alpha_t</annotation></semantics></math> 为基础学习率，<math><semantics><mrow><msub><mi>α</mi><mrow><mi mathvariant="normal">max</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\alpha_{\max}</annotation></semantics></math> 为其峰值，<math><semantics><mrow><msub><mi>β</mi><mrow><mi mathvariant="normal">max</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\beta_{\max}</annotation></semantics></math> 为外推系数上限。外推系数分三个阶段设置。</p>
+<div class="table-wrap" tabindex="0" aria-label="可横向滚动的对照表"><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>外推系数</th>
+<th>操作</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>预热</td>
+<td><math><semantics><mrow><msub><mi>β</mi><mi>t</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\beta_t=0</annotation></semantics></math></td>
+<td>从当前位置更新，累积位移 EMA</td>
+</tr>
+<tr>
+<td>外推</td>
+<td><math><semantics><mrow><msub><mi>β</mi><mi>t</mi></msub><mo>=</mo><msub><mi>β</mi><mrow><mi mathvariant="normal">max</mi></mrow></msub><msub><mi>α</mi><mi>t</mi></msub><mo>/</mo><msub><mi>α</mi><mrow><mi mathvariant="normal">max</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\beta_t=\beta_{\max}\alpha_t/\alpha_{\max}</annotation></semantics></math></td>
+<td>从外推点更新，随学习率调节外推幅度</td>
+</tr>
+<tr>
+<td>提前关闭外推</td>
+<td><math><semantics><mrow><msub><mi>β</mi><mi>t</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\beta_t=0</annotation></semantics></math></td>
+<td>从当前位置继续更新</td>
+</tr>
+</tbody></table></div>
+<p>NanoGPT 124M 的实验共 6200 步，外推在第 1800 步之后启用，第 5600 步之后关闭。训练后段的外推诊断显示，沿历史平均方向移动也会抬高验证损失。随着学习率下降，较早的大位移在 EMA 中仍有权重。</p>
+<figure class="experiment-figure" data-figure="ema-late-lookahead.png"><button type="button" class="figure-zoom" aria-label="放大实验图：训练后段的外推诊断。第 5600、6000、6200 步分别改变外推系数，再测验证损失。"><img src="{{ '/images/optimizer-notes/ema-late-lookahead.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>训练后段的外推诊断。第 5600、6000、6200 步分别改变外推系数，再测验证损失。</figcaption></figure>
+<p><span id="experiments"></span></p>
+<h3>6. 语言模型实验</h3>
+<p><strong>NanoGPT / FineWeb。</strong> 第 200、400、800 步的外推诊断中，增大外推系数时，沿单步位移外推的验证损失比 EMA 方向上升得更快。</p>
+<figure class="experiment-figure" data-figure="ema-early-lookahead.png"><button type="button" class="figure-zoom" aria-label="放大实验图：训练早期的外推诊断。红线沿单步位移外推，绿线沿 EMA 方向外推。"><img src="{{ '/images/optimizer-notes/ema-early-lookahead.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>训练早期的外推诊断。红线沿单步位移外推，绿线沿 EMA 方向外推。</figcaption></figure>
+<p>Track 1（124M）给 Adam、SOAP、Muon 和 NorMuon 加上 EMA-Nesterov，沿用基础优化器配置。验证困惑度的降幅从 Muon 的 0.208 到 Adam 的 1.305。Muon 的外推参数网格中，<math><semantics><mrow><mi>γ</mi><mo>=</mo><mn>0.995</mn></mrow><annotation encoding="application/x-tex">\gamma=0.995</annotation></semantics></math>、<math><semantics><mrow><msub><mi>β</mi><mrow><mi mathvariant="normal">max</mi></mrow></msub><mo>=</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">\beta_{\max}=0.5</annotation></semantics></math> 表现最佳。Track 3（162M）以验证损失 3.28 为目标，比较所需步数。</p>
+<figure class="experiment-figure" data-figure="ema-nanogpt-loss.png"><button type="button" class="figure-zoom" aria-label="放大实验图：NanoGPT 的验证损失。左和中比较四种基础优化器，右比较达到目标损失所需的更新步数。"><img src="{{ '/images/optimizer-notes/ema-nanogpt-loss.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>NanoGPT 的验证损失。左和中比较四种基础优化器，右比较达到目标损失所需的更新步数。</figcaption></figure>
+<figure class="experiment-figure" data-figure="ema-method-sweep.png"><button type="button" class="figure-zoom" aria-label="放大实验图：124M NanoGPT 的外推方法对照。四组分别扫描 EMA-Nesterov、Lookahead、SNOO 和 GPA 的参数。"><img src="{{ '/images/optimizer-notes/ema-method-sweep.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>124M NanoGPT 的外推方法对照。四组分别扫描 EMA-Nesterov、Lookahead、SNOO 和 GPA 的参数。</figcaption></figure>
+<p><strong>Llama / C4-en。</strong> 下表列出各组在相同批量和步数下的验证困惑度。</p>
+<div class="table-wrap" tabindex="0" aria-label="可横向滚动的对照表"><table>
+<thead>
+<tr>
+<th>参数量</th>
+<th align="right">更新步数</th>
+<th align="right">每批 token</th>
+<th align="right">Muon</th>
+<th align="right">EMA-Nesterov + Muon</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>60M</td>
+<td align="right">2500</td>
+<td align="right">0.5M</td>
+<td align="right">28.11</td>
+<td align="right">27.62</td>
+</tr>
+<tr>
+<td>60M</td>
+<td align="right">2500</td>
+<td align="right">4M</td>
+<td align="right">24.09</td>
+<td align="right">23.67</td>
+</tr>
+<tr>
+<td>130M</td>
+<td align="right">2500</td>
+<td align="right">1M</td>
+<td align="right">21.59</td>
+<td align="right">21.26</td>
+</tr>
+<tr>
+<td>350M</td>
+<td align="right">2500</td>
+<td align="right">3M</td>
+<td align="right">16.12</td>
+<td align="right">15.86</td>
+</tr>
+<tr>
+<td>1B</td>
+<td align="right">5000</td>
+<td align="right">4M</td>
+<td align="right">12.22</td>
+<td align="right">12.12</td>
+</tr>
+</tbody></table></div>
+<p>固定 2500 步时，增大批量也增加总 token 数。Muon 的批量扫描中，学习率按批量倍数的四次方根放大，表现优于平方根放大。60M 和 130M 的 5000 步设置中，最优 <math><semantics><mrow><mi>γ</mi></mrow><annotation encoding="application/x-tex">\gamma</annotation></semantics></math> 从 2500 步设置的 0.99 移到 0.995，两组设置的批量和学习率也随之调整。</p>
+<figure class="experiment-figure" data-figure="ema-llama-sweep.png"><button type="button" class="figure-zoom" aria-label="放大实验图：Llama 60M、130M、350M 训练 2500 步。颜色区分 EMA 平滑系数，横轴为最大外推系数。"><img src="{{ '/images/optimizer-notes/ema-llama-sweep.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>Llama 60M、130M、350M 训练 2500 步。颜色区分 EMA 平滑系数，横轴为最大外推系数。</figcaption></figure>
+<figure class="experiment-figure" data-figure="ema-batch-scaling.png"><button type="button" class="figure-zoom" aria-label="放大实验图：Llama 60M 的批量实验。左图按批量倍数的平方根放大学习率，右图按四次方根放大。"><img src="{{ '/images/optimizer-notes/ema-batch-scaling.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>Llama 60M 的批量实验。左图按批量倍数的平方根放大学习率，右图按四次方根放大。</figcaption></figure>
+<figure class="experiment-figure" data-figure="ema-long-schedule.png"><button type="button" class="figure-zoom" aria-label="放大实验图：Llama 60M 和 130M 训练 5000 步的超参数扫描。"><img src="{{ '/images/optimizer-notes/ema-long-schedule.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>Llama 60M 和 130M 训练 5000 步的超参数扫描。</figcaption></figure>
+<p><span id="implementation"></span></p>
+<h3>7. 最小 Python 实现</h3>
+<p>下面用 <math><semantics><mrow><mi>f</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>=</mo><msup><mi>x</mi><mn>2</mn></msup><mo>/</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">f(x)=x^2/2</annotation></semantics></math> 演示更新顺序。基础更新函数接收外推点，返回更新后的参数。</p>
+<pre><code class="language-python">def ema_nesterov(x, base_step, betas, gamma):
+    momentum = 0.0
+    for t, beta in enumerate(betas):
+        y = x + beta * momentum
+        x_next = base_step(y, t)
+        momentum = gamma * momentum + (1 - gamma) * (x_next - x)
+        x = x_next
+    return x
+
+
+def gradient_step(y, t):
+    return y - 0.1 * y
+
+
+betas = [0.0] * 3 + [0.5] * 12 + [0.0] * 5
+result = ema_nesterov(4.0, gradient_step, betas, gamma=0.9)
+print(f&quot;x = {result:.6f}, loss = {0.5 * result**2:.6f}&quot;)
+</code></pre>
+<p><span id="part-3"></span></p>
+<h2>第三部分 · Muon 系列与重尾噪声</h2>
+<p>AdamW 按元素调整更新幅度。Muon 把整张权重矩阵放在一起处理，调整的是矩阵动量的奇异值。这个区别决定了 Muon 怎么更新、为什么需要矩阵乘法，以及怎样在多张卡上做分片。</p>
+<p><span id="muon"></span></p>
+<h3>1. Muon 的来源、递推与工程实现</h3>
+<h4>Muon 为什么处理奇异值</h4>
+<p>Keller Jordan 等在 2024 年的 NanoGPT 提速工作中推出 Muon，全名是 <em>MomentUm Orthogonalized by Newton–Schulz</em>。他们观察到，Transformer 的矩阵更新往往集中在少数奇异方向。Muon 从 SGD 动量出发，缩小更新中各奇异方向的幅度差距。</p>
+<p>假设动量矩阵是 <math><semantics><mrow><mi>B</mi><mo>=</mo><mi mathvariant="normal">diag</mi><mo stretchy="false">(</mo><mn>12</mn><mo>,</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">B=\operatorname{diag}(12,1)</annotation></semantics></math>。直接用动量更新，两个方向的幅度比是 12 比 1。Muon 对应的理想变换把它改成 <math><semantics><mrow><mi mathvariant="normal">diag</mi><mo stretchy="false">(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\operatorname{diag}(1,1)</annotation></semantics></math>。对一般矩阵，先写成奇异值分解 <math><semantics><mrow><mi>B</mi><mo>=</mo><mi>U</mi><mi>Σ</mi><msup><mi>V</mi><mo>⊤</mo></msup></mrow><annotation encoding="application/x-tex">B=U\Sigma V^\top</annotation></semantics></math>，保留非零奇异值对应的左右奇异向量，再令 <math><semantics><mrow><mi>Q</mi><mo>=</mo><mi>U</mi><msup><mi>V</mi><mo>⊤</mo></msup></mrow><annotation encoding="application/x-tex">Q=UV^\top</annotation></semantics></math>。这相当于把保留下来的奇异值都设成 1。<math><semantics><mrow><mi>Q</mi></mrow><annotation encoding="application/x-tex">Q</annotation></semantics></math> 称为极因子。</p>
+<h4>为什么用谱范数约束</h4>
+<p>对线性层 <math><semantics><mrow><mi>W</mi><mi>x</mi></mrow><annotation encoding="application/x-tex">Wx</annotation></semantics></math>，权重变化 <math><semantics><mrow><mi>D</mi></mrow><annotation encoding="application/x-tex">D</annotation></semantics></math> 会让输出改变 <math><semantics><mrow><mi>D</mi><mi>x</mi></mrow><annotation encoding="application/x-tex">Dx</annotation></semantics></math>。<math><semantics><mrow><mi>D</mi></mrow><annotation encoding="application/x-tex">D</annotation></semantics></math> 的谱范数 <math><semantics><mrow><mo stretchy="false">‖</mo><mi>D</mi><msub><mo stretchy="false">‖</mo><mrow><mi mathvariant="normal">op</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\lVert D\rVert_{\rm op}</annotation></semantics></math> 等于单位输入上最大可能的输出变化，也就是 <math><semantics><mrow><mi>D</mi></mrow><annotation encoding="application/x-tex">D</annotation></semantics></math> 的最大奇异值。因此，限制更新的谱范数，就是给一步更新对任意单位输入的影响设上限。</p>
+<p>用动量 <math><semantics><mrow><mi>B</mi></mrow><annotation encoding="application/x-tex">B</annotation></semantics></math> 估计下降方向时，一阶项是 <math><semantics><mrow><mo stretchy="false">⟨</mo><mi>B</mi><mo>,</mo><mi>D</mi><msub><mo stretchy="false">⟩</mo><mi>F</mi></msub></mrow><annotation encoding="application/x-tex">\langle B,D\rangle_F</annotation></semantics></math>。对偶不等式给出下界 <math><semantics><mrow><mo>−</mo><mo stretchy="false">‖</mo><mi>B</mi><msub><mo stretchy="false">‖</mo><mo>∗</mo></msub></mrow><annotation encoding="application/x-tex">-\lVert B\rVert_*</annotation></semantics></math>，也就是负的奇异值之和。取 <math><semantics><mrow><mi>D</mi><mo>=</mo><mo>−</mo><mi>Q</mi></mrow><annotation encoding="application/x-tex">D=-Q</annotation></semantics></math> 恰好达到这个下界。</p>
+<div class="math-display"><math display="block"><semantics><mrow><mo>−</mo><mi>Q</mi><mo>∈</mo><mi mathvariant="normal">arg</mi><msub><mi mathvariant="normal">min</mi><mrow><mo stretchy="false">‖</mo><mi>D</mi><msub><mo stretchy="false">‖</mo><mrow><mi mathvariant="normal">op</mi></mrow></msub><mo>≤</mo><mn>1</mn></mrow></msub><mo stretchy="false">⟨</mo><mi>B</mi><mo>,</mo><mi>D</mi><msub><mo stretchy="false">⟩</mo><mi>F</mi></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">-Q\in\arg\min_{\lVert D\rVert_{\rm op}\le 1}\langle B,D\rangle_F.</annotation></semantics></math></div>
+
+<div class="math-display"><math display="block"><semantics><mrow><mo stretchy="false">⟨</mo><mi>B</mi><mo>,</mo><mo>−</mo><mi>Q</mi><msub><mo stretchy="false">⟩</mo><mi>F</mi></msub><mo>=</mo><mo>−</mo><mo stretchy="false">‖</mo><mi>B</mi><msub><mo stretchy="false">‖</mo><mo>∗</mo></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">\langle B,-Q\rangle_F=-\lVert B\rVert_*.</annotation></semantics></math></div>
+
+<h4>一次实际更新</h4>
+<p>设 <math><semantics><mrow><msub><mi>W</mi><mi>t</mi></msub><mo>∈</mo><msup><mi mathvariant="normal">ℝ</mi><mrow><mi>m</mi><mo>×</mo><mi>n</mi></mrow></msup></mrow><annotation encoding="application/x-tex">W_t\in\mathbb R^{m\times n}</annotation></semantics></math>，<math><semantics><mrow><msub><mi>G</mi><mi>t</mi></msub><mo>=</mo><msub><mo>∇</mo><mi>W</mi></msub><mi>ℓ</mi><mo stretchy="false">(</mo><msub><mi>W</mi><mi>t</mi></msub><mo>;</mo><msub><mi>ξ</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">G_t=\nabla_W\ell(W_t;\xi_t)</annotation></semantics></math>。Jordan 仓库先把当前梯度加进动量 <math><semantics><mrow><msub><mi>M</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">M_t</annotation></semantics></math>，再把当前梯度与更新后的动量混合成 <math><semantics><mrow><msub><mi>B</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">B_t</annotation></semantics></math>，最后对 <math><semantics><mrow><msub><mi>B</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">B_t</annotation></semantics></math> 做 <math><semantics><mrow><mi>k</mi></mrow><annotation encoding="application/x-tex">k</annotation></semantics></math> 轮 Newton–Schulz。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>M</mi><mi>t</mi></msub><mo>=</mo><mi>μ</mi><msub><mi>M</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>μ</mi><mo stretchy="false">)</mo><msub><mi>G</mi><mi>t</mi></msub><mo>,</mo><mspace width="2em"/><msub><mi>B</mi><mi>t</mi></msub><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>μ</mi><mo stretchy="false">)</mo><msub><mi>G</mi><mi>t</mi></msub><mo>+</mo><mi>μ</mi><msub><mi>M</mi><mi>t</mi></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">M_t=\mu M_{t-1}+(1-\mu)G_t,\qquad
+B_t=(1-\mu)G_t+\mu M_t.</annotation></semantics></math></div>
+
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>Q</mi><mi>t</mi></msub><mo>=</mo><msub><mi mathvariant="normal">NS</mi><mi>k</mi></msub><mo stretchy="false">(</mo><msub><mi>B</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>.</mo></mrow><annotation encoding="application/x-tex">Q_t=\operatorname{NS}_k(B_t).</annotation></semantics></math></div>
+
+<p>默认动量系数为 0.95。关闭 Nesterov 式混合时取 <math><semantics><mrow><msub><mi>B</mi><mi>t</mi></msub><mo>=</mo><msub><mi>M</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">B_t=M_t</annotation></semantics></math>。权重更新分两项，先按比例缩小旧权重，再减去缩放后的矩阵方向。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>W</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msub><mi>η</mi><mi>t</mi></msub><mi>λ</mi><mo stretchy="false">)</mo><msub><mi>W</mi><mi>t</mi></msub><mo>−</mo><msub><mi>η</mi><mi>t</mi></msub><msub><mi>s</mi><mrow><mi>m</mi><mo>,</mo><mi>n</mi></mrow></msub><msub><mi>Q</mi><mi>t</mi></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">W_{t+1}=(1-\eta_t\lambda)W_t-\eta_t s_{m,n}Q_t.</annotation></semantics></math></div>
+
+<p>Jordan 实现的 Nesterov 式混合发生在梯度求出之后，求梯度的位置是 <math><semantics><mrow><msub><mi>W</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">W_t</annotation></semantics></math>。第二篇的 EMA-Nesterov 在求梯度之前移动查询点。</p>
+<h4>Newton–Schulz 如何落到 GPU</h4>
+<p>GPU 实现用矩阵乘法近似极因子。先用 Frobenius 范数把输入缩到谱范数至多为 1，取 <math><semantics><mrow><msub><mi>X</mi><mn>0</mn></msub><mo>=</mo><msub><mi>B</mi><mi>t</mi></msub><mo>/</mo><mo stretchy="false">(</mo><mo stretchy="false">‖</mo><msub><mi>B</mi><mi>t</mi></msub><msub><mo stretchy="false">‖</mo><mi>F</mi></msub><mo>+</mo><mi>ϵ</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">X_0=B_t/(\lVert B_t\rVert_F+\epsilon)</annotation></semantics></math>。若行数大于列数，先转置，迭代后再转回。这样 <math><semantics><mrow><msub><mi>A</mi><mi>j</mi></msub><mo>=</mo><msub><mi>X</mi><mi>j</mi></msub><msubsup><mi>X</mi><mi>j</mi><mo>⊤</mo></msubsup></mrow><annotation encoding="application/x-tex">A_j=X_jX_j^\top</annotation></semantics></math> 的边长取矩阵短边。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>A</mi><mi>j</mi></msub><mo>=</mo><msub><mi>X</mi><mi>j</mi></msub><msubsup><mi>X</mi><mi>j</mi><mo>⊤</mo></msubsup><mo>,</mo><mspace width="2em"/><msub><mi>X</mi><mrow><mi>j</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mi>a</mi><msub><mi>X</mi><mi>j</mi></msub><mo>+</mo><mo stretchy="false">(</mo><mi>b</mi><msub><mi>A</mi><mi>j</mi></msub><mo>+</mo><mi>c</mi><msubsup><mi>A</mi><mi>j</mi><mn>2</mn></msubsup><mo stretchy="false">)</mo><msub><mi>X</mi><mi>j</mi></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">A_j=X_jX_j^\top,\qquad
+X_{j+1}=aX_j+(bA_j+cA_j^2)X_j.</annotation></semantics></math></div>
+
+<p>把 <math><semantics><mrow><msub><mi>X</mi><mi>j</mi></msub></mrow><annotation encoding="application/x-tex">X_j</annotation></semantics></math> 的奇异值分解代进去，<math><semantics><mrow><msub><mi>A</mi><mi>j</mi></msub></mrow><annotation encoding="application/x-tex">A_j</annotation></semantics></math> 对应平方奇异值，<math><semantics><mrow><msub><mi>A</mi><mi>j</mi></msub><msub><mi>X</mi><mi>j</mi></msub></mrow><annotation encoding="application/x-tex">A_jX_j</annotation></semantics></math> 对应三次方，<math><semantics><mrow><msubsup><mi>A</mi><mi>j</mi><mn>2</mn></msubsup><msub><mi>X</mi><mi>j</mi></msub></mrow><annotation encoding="application/x-tex">A_j^2X_j</annotation></semantics></math> 对应五次方。因此每轮保留左右奇异向量，只把奇异值 <math><semantics><mrow><mi>z</mi></mrow><annotation encoding="application/x-tex">z</annotation></semantics></math> 改为 <math><semantics><mrow><mi>a</mi><mi>z</mi><mo>+</mo><mi>b</mi><msup><mi>z</mi><mn>3</mn></msup><mo>+</mo><mi>c</mi><msup><mi>z</mi><mn>5</mn></msup></mrow><annotation encoding="application/x-tex">az+bz^3+cz^5</annotation></semantics></math>。Jordan 版在 BF16 中通常做 5 轮，系数为 <math><semantics><mrow><mo stretchy="false">(</mo><mn>3.4445</mn><mo>,</mo><mo>−</mo><mn>4.7750</mn><mo>,</mo><mn>2.0315</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(3.4445,-4.7750,2.0315)</annotation></semantics></math>。用下方 FP32 示例处理 <math><semantics><mrow><mi mathvariant="normal">diag</mi><mo stretchy="false">(</mo><mn>12</mn><mo>,</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\operatorname{diag}(12,1)</annotation></semantics></math>，5 轮后的奇异值约为 0.856 和 0.700。理想极因子的两个奇异值都是 1。</p>
+<p>下面用 NumPy 写出同一矩阵递推，以 FP32 演示。</p>
+<pre><code class="language-python">import numpy as np
+
+
+def muon_ns(matrix, steps=5):
+    x = np.asarray(matrix, dtype=np.float32)
+    transposed = x.shape[0] &gt; x.shape[1]
+    if transposed:
+        x = x.T
+    x = x / (np.linalg.norm(x) + 1e-7)
+    for _ in range(steps):
+        gram = x @ x.T
+        x = 3.4445 * x + (-4.7750 * gram + 2.0315 * (gram @ gram)) @ x
+    return x.T if transposed else x
+
+
+def muon_step(weight, grad, momentum, lr, decay=0.0, beta=0.95):
+    rows, cols = weight.shape
+    momentum = beta * momentum + (1 - beta) * grad
+    direction = muon_ns((1 - beta) * grad + beta * momentum)
+    scale = np.sqrt(max(1.0, rows / cols))
+    updated = (1 - lr * decay) * weight - lr * scale * direction
+    return updated, momentum
+</code></pre>
+<h4>参数分组、形状缩放与分片</h4>
+<p><strong>参数分组。</strong> Jordan 的训练配方把隐藏层权重矩阵交给 Muon，把输入嵌入、输出头、归一化参数和偏置交给 AdamW。卷积核可以把后三个维度展平，再用 Muon 更新。</p>
+<p><strong>形状缩放。</strong> 满秩极因子有 <math><semantics><mrow><mi mathvariant="normal">min</mi><mo stretchy="false">(</mo><mi>m</mi><mo>,</mo><mi>n</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\min(m,n)</annotation></semantics></math> 个值为 1 的奇异值，因此元素的均方根（RMS）是 <math><semantics><mrow><mn>1</mn><mo>/</mo><msqrt><mrow><mi mathvariant="normal">max</mi><mo stretchy="false">(</mo><mi>m</mi><mo>,</mo><mi>n</mi><mo stretchy="false">)</mo></mrow></msqrt></mrow><annotation encoding="application/x-tex">1/\sqrt{\max(m,n)}</annotation></semantics></math>。Jordan 版使用 <math><semantics><mrow><msub><mi>s</mi><mrow><mi>m</mi><mo>,</mo><mi>n</mi></mrow></msub><mo>=</mo><msqrt><mrow><mi mathvariant="normal">max</mi><mo stretchy="false">(</mo><mn>1</mn><mo>,</mo><mi>m</mi><mo>/</mo><mi>n</mi><mo stretchy="false">)</mo></mrow></msqrt></mrow><annotation encoding="application/x-tex">s_{m,n}=\sqrt{\max(1,m/n)}</annotation></semantics></math>，把每行长度的均方根调到 1。Moonlight 使用 <math><semantics><mrow><msub><mi>s</mi><mrow><mi>m</mi><mo>,</mo><mi>n</mi></mrow></msub><mo>=</mo><mn>0.2</mn><msqrt><mrow><mi mathvariant="normal">max</mi><mo stretchy="false">(</mo><mi>m</mi><mo>,</mo><mi>n</mi><mo stretchy="false">)</mo></mrow></msqrt></mrow><annotation encoding="application/x-tex">s_{m,n}=0.2\sqrt{\max(m,n)}</annotation></semantics></math>，把元素 RMS 调到 0.2，以便和 AdamW 更新的量级对齐。实际的有限轮近似会让这个数值有所变化。</p>
+<p><strong>多卡训练。</strong> Jordan 的 DDP 版把不同矩阵分给不同的卡更新，再收集更新后的权重。Moonlight 按数据并行组分片存储主权重和动量。每张卡先对本地梯度分片做动量更新，再为正交化聚合所需的整张矩阵。算出完整更新后，只应用属于本卡的切片，最后同步权重。跨卡聚合的原因是 <math><semantics><mrow><mi>X</mi><msup><mi>X</mi><mo>⊤</mo></msup></mrow><annotation encoding="application/x-tex">XX^\top</annotation></semantics></math> 要用到整个矩阵的数据。</p>
+<p>Moonlight 用这套配方训练了总参数 16B、每个 token 激活约 3B 参数的 MoE，共处理 5.7T tokens。</p>
+<p><span id="mona"></span></p>
+<h3>2. MONA：正交化前的梯度差</h3>
+<h4>梯度差提供什么信息</h4>
+<p>考虑走了同样长的一步。损失曲面越弯，沿该方向的梯度通常变得越快。对全梯度，相邻两步的梯度差可用 Hessian 作用在这段位移上来近似。MONA 用已有的两次梯度做差来获取这一信号。每步换小批量也会改变梯度，所以先对差分做 EMA，再把它加进当前梯度。</p>
+<h4>先修正梯度，再走 Muon 流程</h4>
+<p>初始化 <math><semantics><mrow><msub><mi>G</mi><mn>0</mn></msub><mo>=</mo><msub><mi>A</mi><mn>0</mn></msub><mo>=</mo><msub><mi>M</mi><mn>0</mn></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">G_0=A_0=M_0=0</annotation></semantics></math>。在 <math><semantics><mrow><msub><mi>W</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">W_t</annotation></semantics></math> 上计算小批量梯度 <math><semantics><mrow><msub><mi>G</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">G_t</annotation></semantics></math>，用 <math><semantics><mrow><msub><mi>D</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">D_t</annotation></semantics></math> 记录它与上一梯度的差，<math><semantics><mrow><msub><mi>A</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">A_t</annotation></semantics></math> 记录差分的指数移动平均。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>D</mi><mi>t</mi></msub><mo>=</mo><msub><mi>G</mi><mi>t</mi></msub><mo>−</mo><msub><mi>G</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>,</mo><mspace width="2em"/><msub><mi>A</mi><mi>t</mi></msub><mo>=</mo><msub><mi>β</mi><mi>a</mi></msub><msub><mi>A</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msub><mi>β</mi><mi>a</mi></msub><mo stretchy="false">)</mo><msub><mi>D</mi><mi>t</mi></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">D_t=G_t-G_{t-1},\qquad
+A_t=\beta_a A_{t-1}+(1-\beta_a)D_t.</annotation></semantics></math></div>
+
+<p>把 <math><semantics><mrow><msub><mi>A</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">A_t</annotation></semantics></math> 乘上修正强度 <math><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math> 加回当前梯度，再更新矩阵动量 <math><semantics><mrow><msub><mi>M</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">M_t</annotation></semantics></math>。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mover accent="true"><mi>G</mi><mo>~</mo></mover><mi>t</mi></msub><mo>=</mo><msub><mi>G</mi><mi>t</mi></msub><mo>+</mo><mi>α</mi><msub><mi>A</mi><mi>t</mi></msub><mo>,</mo><mspace width="2em"/><msub><mi>M</mi><mi>t</mi></msub><mo>=</mo><mi>μ</mi><msub><mi>M</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mover accent="true"><mi>G</mi><mo>~</mo></mover><mi>t</mi></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">\widetilde G_t=G_t+\alpha A_t,\qquad M_t=\mu M_{t-1}+\widetilde G_t.</annotation></semantics></math></div>
+
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>Q</mi><mi>t</mi></msub><mo>=</mo><msub><mi mathvariant="normal">NS</mi><mi>k</mi></msub><mo stretchy="false">(</mo><msub><mi>M</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>,</mo><mspace width="2em"/><msub><mi>W</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><msub><mi>η</mi><mi>t</mi></msub><mi>λ</mi><mo stretchy="false">)</mo><msub><mi>W</mi><mi>t</mi></msub><mo>−</mo><msub><mi>η</mi><mi>t</mi></msub><msub><mi>s</mi><mrow><mi>m</mi><mo>,</mo><mi>n</mi></mrow></msub><msub><mi>Q</mi><mi>t</mi></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">Q_t=\operatorname{NS}_k(M_t),\qquad
+W_{t+1}=(1-\eta_t\lambda)W_t-\eta_t s_{m,n}Q_t.</annotation></semantics></math></div>
+
+<p>拿矩阵的一行举例。上一梯度是 <math><semantics><mrow><mo stretchy="false">(</mo><mn>3</mn><mo>,</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(3,1)</annotation></semantics></math>，当前梯度是 <math><semantics><mrow><mo stretchy="false">(</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(2,2)</annotation></semantics></math>，差分为 <math><semantics><mrow><mo stretchy="false">(</mo><mo>−</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(-1,1)</annotation></semantics></math>。若差分 EMA 原来是零，取 <math><semantics><mrow><msub><mi>β</mi><mi>a</mi></msub><mo>=</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">\beta_a=0.5</annotation></semantics></math> 和 <math><semantics><mrow><mi>α</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\alpha=1</annotation></semantics></math>，送入动量的这一行就变成 <math><semantics><mrow><mo stretchy="false">(</mo><mn>1.5</mn><mo>,</mo><mn>2.5</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(1.5,2.5)</annotation></semantics></math>。取 <math><semantics><mrow><mi>α</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\alpha=0</annotation></semantics></math> 时，递推回到该实验采用的 Muon 基线。</p>
+<p>标准实现多存两张与梯度同形状的矩阵，上一梯度和差分 EMA。若两者都用 FP32，每个交给 MONA 的权重元素额外占 8 字节。更新 <math><semantics><mrow><msub><mi>A</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">A_t</annotation></semantics></math> 后才能用当前梯度覆盖上一梯度。MONA-Lite 用 BF16 存辅助状态。</p>
+<h4>实验验证</h4>
+<p>LongCat 架构的 MoE-1B-A0.2B 和 MoE-6B-A0.5B 分别训练约 400B 和 1.2T tokens。作者固定学习率、调度和批量，对比预训练期间的验证损失。两个规模上，MONA 的代码和通用英文验证曲线都低于 Muon。68B 模型则在训练到 700B tokens 时取检查点，评测通用、代码和数学任务。</p>
+<figure class="experiment-figure" data-figure="mona-1b-pretraining.png"><button type="button" class="figure-zoom" aria-label="放大实验图：MoE-1B-A0.2B 的预训练验证损失。左为代码，右为通用英文。"><img src="{{ '/images/optimizer-notes/mona-1b-pretraining.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>MoE-1B-A0.2B 的预训练验证损失。左为代码，右为通用英文。</figcaption></figure>
+<figure class="experiment-figure" data-figure="mona-6b-pretraining.png"><button type="button" class="figure-zoom" aria-label="放大实验图：MoE-6B-A0.5B 的预训练验证损失。左为代码，右为通用英文。"><img src="{{ '/images/optimizer-notes/mona-6b-pretraining.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>MoE-6B-A0.5B 的预训练验证损失。左为代码，右为通用英文。</figcaption></figure>
+<div class="table-wrap" tabindex="0" aria-label="可横向滚动的对照表"><table>
+<thead>
+<tr>
+<th>68B 检查点评测</th>
+<th align="right">AdamW</th>
+<th align="right">Muon</th>
+<th align="right">MONA</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>通用任务平均</td>
+<td align="right">0.4382</td>
+<td align="right">0.4478</td>
+<td align="right">0.4557</td>
+</tr>
+<tr>
+<td>代码与数学任务平均</td>
+<td align="right">0.3353</td>
+<td align="right">0.3397</td>
+<td align="right">0.3495</td>
+</tr>
+<tr>
+<td>Math（CoT）</td>
+<td align="right">0.1648</td>
+<td align="right">0.1684</td>
+<td align="right">0.1594</td>
+</tr>
+<tr>
+<td>HumanEval+</td>
+<td align="right">0.2927</td>
+<td align="right">0.2866</td>
+<td align="right">0.2805</td>
+</tr>
+</tbody></table></div>
+<p>相对 Muon，MONA 的两项平均分分别提高 0.0079 和 0.0098，Math（CoT）和 HumanEval+ 两项下降。作者又对两个检查点使用同一套代码监督微调，MONA 预训练的模型在七项 BigCode 评测中有六项得分更高。1B 实验中，BF16 版的验证曲线接近 FP32 版。</p>
+<figure class="experiment-figure" data-figure="mona-code-sft.png"><button type="button" class="figure-zoom" aria-label="放大实验图：68B 模型的代码监督微调损失。两组从不同预训练检查点出发，采用相同的微调设置。"><img src="{{ '/images/optimizer-notes/mona-code-sft.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>68B 模型的代码监督微调损失。两组从不同预训练检查点出发，采用相同的微调设置。</figcaption></figure>
+<figure class="experiment-figure" data-figure="mona-lite.png"><button type="button" class="figure-zoom" aria-label="放大实验图：1B 模型的 MONA-Lite 对照。左为代码，右为通用英文。蓝线是 Muon，绿线是 FP32 MONA，橙线是 MONA-Lite。"><img src="{{ '/images/optimizer-notes/mona-lite.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>1B 模型的 MONA-Lite 对照。左为代码，右为通用英文。蓝线是 Muon，绿线是 FP32 MONA，橙线是 MONA-Lite。</figcaption></figure>
+<p><span id="muown"></span></p>
+<h3>3. Muown：控制权重行范数</h3>
+<h4>权重矩阵的谱范数为什么上涨</h4>
+<p>即使每一步的更新都有上限，多步更新也可能积累出很大的权重。谱范数变大有两种来源。各行可以变长，也可以变得更对齐。例如，两行单位向量互相垂直时，谱范数是 1。两行转到同一方向后，行长仍为 1，谱范数却变成 <math><semantics><mrow><msqrt><mn>2</mn></msqrt></mrow><annotation encoding="application/x-tex">\sqrt 2</annotation></semantics></math>。</p>
+<p>Lion 等用一个等式拆开这两种影响。把每行写成长度 <math><semantics><mrow><msub><mi>a</mi><mi>i</mi></msub><mo>=</mo><mo stretchy="false">‖</mo><msub><mi>W</mi><mi>i</mi></msub><msub><mo stretchy="false">‖</mo><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">a_i=\lVert W_i\rVert_2</annotation></semantics></math> 乘单位方向 <math><semantics><mrow><msub><mi>U</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">U_i</annotation></semantics></math>，再用对角矩阵 <math><semantics><mrow><mi>P</mi><mo>=</mo><mi mathvariant="normal">Diag</mi><mo stretchy="false">(</mo><mi>a</mi><mo>/</mo><mo stretchy="false">‖</mo><mi>a</mi><msub><mo stretchy="false">‖</mo><mo>∞</mo></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">P=\operatorname{Diag}(a/\lVert a\rVert_\infty)</annotation></semantics></math> 记录各行相对于最长一行的长度。</p>
+<div class="math-display"><math display="block"><semantics><mrow><mo stretchy="false">‖</mo><mi>W</mi><msub><mo stretchy="false">‖</mo><mrow><mi mathvariant="normal">op</mi></mrow></msub><mo>=</mo><mo stretchy="false">‖</mo><mi>a</mi><msub><mo stretchy="false">‖</mo><mo>∞</mo></msub><msqrt><mrow><msub><mi>λ</mi><mrow><mi mathvariant="normal">max</mi></mrow></msub><mo stretchy="false">(</mo><mi>P</mi><mi>U</mi><msup><mi>U</mi><mo>⊤</mo></msup><mi>P</mi><mo stretchy="false">)</mo></mrow></msqrt><mo>.</mo></mrow><annotation encoding="application/x-tex">\lVert W\rVert_{\rm op}=\lVert a\rVert_\infty\sqrt{\lambda_{\max}(P UU^\top P)}.</annotation></semantics></math></div>
+
+<p>等式右侧第一项是最大行长。第二项同时反映行方向有多对齐、各行相对有多长。在关闭权重衰减的 500M 实验中，最大行长和谱范数一起上涨，第二项在训练早期短暂变化后较平稳。作者又把每行长度固定在初始值，谱范数的系统性上涨随之消失。Muown 因此给每行长度单独安排一个更新分支。</p>
+<figure class="experiment-figure" data-figure="muown-row-drift.png"><button type="button" class="figure-zoom" aria-label="放大实验图：500M 模型的行长与谱范数。左两图比较最大行长和谱范数，右两图比较方向对齐项。"><img src="{{ '/images/optimizer-notes/muown-row-drift.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>500M 模型的行长与谱范数。左两图比较最大行长和谱范数，右两图比较方向对齐项。</figcaption></figure>
+<h4>每行分别更新长度和方向</h4>
+<p>有效权重的第 <math><semantics><mrow><mi>i</mi></mrow><annotation encoding="application/x-tex">i</annotation></semantics></math> 行写成 <math><semantics><mrow><msub><mi>W</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><msub><mi>g</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><msub><mi>U</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow><annotation encoding="application/x-tex">W_{t,i}=g_{t,i}U_{t,i}</annotation></semantics></math>。<math><semantics><mrow><msub><mi>g</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow><annotation encoding="application/x-tex">g_{t,i}</annotation></semantics></math> 是增益，实际行长为 <math><semantics><mrow><mo stretchy="false">|</mo><msub><mi>g</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo stretchy="false">|</mo></mrow><annotation encoding="application/x-tex">\lvert g_{t,i}\rvert</annotation></semantics></math>。<math><semantics><mrow><msub><mi>U</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow><annotation encoding="application/x-tex">U_{t,i}</annotation></semantics></math> 是单位方向，由内部变量 <math><semantics><mrow><msub><mi>R</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow><annotation encoding="application/x-tex">R_{t,i}</annotation></semantics></math> 除以它的长度 <math><semantics><mrow><msub><mi>r</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><mo stretchy="false">‖</mo><msub><mi>R</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><msub><mo stretchy="false">‖</mo><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">r_{t,i}=\lVert R_{t,i}\rVert_2</annotation></semantics></math> 得到。初始化时，用原权重作为 <math><semantics><mrow><mi>R</mi></mrow><annotation encoding="application/x-tex">R</annotation></semantics></math>，用原权重的行范数作为 <math><semantics><mrow><mi>g</mi></mrow><annotation encoding="application/x-tex">g</annotation></semantics></math> 和 <math><semantics><mrow><mi>r</mi></mrow><annotation encoding="application/x-tex">r</annotation></semantics></math>。</p>
+<p>反向传播给出有效权重梯度 <math><semantics><mrow><msub><mi>G</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">G_t</annotation></semantics></math>。沿着当前行方向的梯度分量 <math><semantics><mrow><msub><mi>h</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow><annotation encoding="application/x-tex">h_{t,i}</annotation></semantics></math> 用来调增益。从 <math><semantics><mrow><msub><mi>G</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow><annotation encoding="application/x-tex">G_{t,i}</annotation></semantics></math> 中减掉这一分量，剩下的部分垂直于当前行方向，用来转动方向。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>h</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><mo stretchy="false">⟨</mo><msub><mi>G</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>,</mo><msub><mi>U</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo stretchy="false">⟩</mo><mo>,</mo><mspace width="2em"/><msub><mi>H</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><mfrac><mrow><msub><mi>g</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow><mrow><msub><mi>r</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow></mfrac><mo stretchy="false">(</mo><msub><mi>G</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>−</mo><msub><mi>h</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><msub><mi>U</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo stretchy="false">)</mo><mo>.</mo></mrow><annotation encoding="application/x-tex">h_{t,i}=\langle G_{t,i},U_{t,i}\rangle,\qquad
+H_{t,i}=\frac{g_{t,i}}{r_{t,i}}(G_{t,i}-h_{t,i}U_{t,i}).</annotation></semantics></math></div>
+
+<p>例如，当前方向为 <math><semantics><mrow><mo stretchy="false">(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(1,0)</annotation></semantics></math>，收到的梯度为 <math><semantics><mrow><mo stretchy="false">(</mo><mn>2</mn><mo>,</mo><mn>4</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(2,4)</annotation></semantics></math>，增益 <math><semantics><mrow><msub><mi>g</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">g_{t,i}=3</annotation></semantics></math>，内部行长 <math><semantics><mrow><msub><mi>r</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">r_{t,i}=2</annotation></semantics></math>。于是增益梯度为 2，方向梯度为 <math><semantics><mrow><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><mn>6</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(0,6)</annotation></semantics></math>。因子 <math><semantics><mrow><msub><mi>g</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>/</mo><msub><mi>r</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow><annotation encoding="application/x-tex">g_{t,i}/r_{t,i}</annotation></semantics></math> 来自对 <math><semantics><mrow><msub><mi>W</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><msub><mi>g</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><msub><mi>R</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>/</mo><msub><mi>r</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow><annotation encoding="application/x-tex">W_{t,i}=g_{t,i}R_{t,i}/r_{t,i}</annotation></semantics></math> 求导。</p>
+<p><math><semantics><mrow><msub><mi>H</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">H_t</annotation></semantics></math> 进入方向动量和正交化。这里用非归一化动量，方向步长的形状因子为 <math><semantics><mrow><msub><mi>s</mi><mrow><mi>m</mi><mo>,</mo><mi>n</mi></mrow></msub><mo>=</mo><mn>0.2</mn><msqrt><mrow><mi mathvariant="normal">max</mi><mo stretchy="false">(</mo><mi>m</mi><mo>,</mo><mi>n</mi><mo stretchy="false">)</mo></mrow></msqrt></mrow><annotation encoding="application/x-tex">s_{m,n}=0.2\sqrt{\max(m,n)}</annotation></semantics></math>。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>M</mi><mi>t</mi></msub><mo>=</mo><mi>μ</mi><msub><mi>M</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>H</mi><mi>t</mi></msub><mo>,</mo><mspace width="2em"/><msub><mi>Q</mi><mi>t</mi></msub><mo>=</mo><msub><mi mathvariant="normal">NS</mi><mi>k</mi></msub><mo stretchy="false">(</mo><msub><mi>H</mi><mi>t</mi></msub><mo>+</mo><mi>μ</mi><msub><mi>M</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>.</mo></mrow><annotation encoding="application/x-tex">M_t=\mu M_{t-1}+H_t,\qquad Q_t=\operatorname{NS}_k(H_t+\mu M_t).</annotation></semantics></math></div>
+
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>R</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>R</mi><mi>t</mi></msub><mo>−</mo><msub><mi>η</mi><mi>t</mi></msub><msub><mi>s</mi><mrow><mi>m</mi><mo>,</mo><mi>n</mi></mrow></msub><msub><mi>Q</mi><mi>t</mi></msub><mo>,</mo><mspace width="2em"/><msub><mi>g</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mi mathvariant="normal">AdamStep</mi><mo stretchy="false">(</mo><msub><mi>g</mi><mi>t</mi></msub><mo>,</mo><msub><mi>h</mi><mi>t</mi></msub><mo>,</mo><msub><mi>η</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>.</mo></mrow><annotation encoding="application/x-tex">R_{t+1}=R_t-\eta_t s_{m,n}Q_t,\qquad
+g_{t+1}=\operatorname{AdamStep}(g_t,h_t,\eta_t).</annotation></semantics></math></div>
+
+<p>增益分支把 <math><semantics><mrow><msub><mi>h</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">h_t</annotation></semantics></math> 当作 Adam 的梯度。Adam 对每行的增益各自维护一阶矩和二阶矩，做偏差修正后更新 <math><semantics><mrow><mi>g</mi></mrow><annotation encoding="application/x-tex">g</annotation></semantics></math>。最后重新归一化 <math><semantics><mrow><mi>R</mi></mrow><annotation encoding="application/x-tex">R</annotation></semantics></math>，将增益与单位方向合成前向传播所用的权重。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>U</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><mfrac><mrow><msub><mi>R</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn><mo>,</mo><mi>i</mi></mrow></msub></mrow><mrow><mo stretchy="false">‖</mo><msub><mi>R</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn><mo>,</mo><mi>i</mi></mrow></msub><msub><mo stretchy="false">‖</mo><mn>2</mn></msub></mrow></mfrac><mo>,</mo><mspace width="2em"/><msub><mi>W</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mi mathvariant="normal">Diag</mi><mo stretchy="false">(</mo><msub><mi>g</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false">)</mo><msub><mi>U</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">U_{t+1,i}=\frac{R_{t+1,i}}{\lVert R_{t+1,i}\rVert_2},\qquad
+W_{t+1}=\operatorname{Diag}(g_{t+1})U_{t+1}.</annotation></semantics></math></div>
+
+<p>实现把拆分和重组留在优化器内部。对非零行，可以用 <math><semantics><mrow><msub><mi>R</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><mo stretchy="false">(</mo><msub><mi>r</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>/</mo><msub><mi>g</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo stretchy="false">)</mo><msub><mi>W</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow><annotation encoding="application/x-tex">R_{t,i}=(r_{t,i}/g_{t,i})W_{t,i}</annotation></semantics></math> 重建方向变量。每层比 Muon 多存四个长度为行数的向量，分别是 <math><semantics><mrow><mi>g</mi></mrow><annotation encoding="application/x-tex">g</annotation></semantics></math>、<math><semantics><mrow><mi>r</mi></mrow><annotation encoding="application/x-tex">r</annotation></semantics></math> 和 Adam 的两个矩估计。初始化为零的行无法从权重中取得单位方向，可沿用原优化器。</p>
+<h4>实验验证</h4>
+<p>500M 模型在 FineWeb-Edu 上训练 10B tokens。下表为三个随机种子的验证困惑度，<math><semantics><mrow><mi>λ</mi></mrow><annotation encoding="application/x-tex">\lambda</annotation></semantics></math> 为权重衰减，正负号后是标准差。</p>
+<div class="table-wrap" tabindex="0" aria-label="可横向滚动的对照表"><table>
+<thead>
+<tr>
+<th>学习率</th>
+<th align="right">Muown，<math><semantics><mrow><mi>λ</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\lambda=0</annotation></semantics></math></th>
+<th align="right">Muon，<math><semantics><mrow><mi>λ</mi><mo>=</mo><mn>0.1</mn></mrow><annotation encoding="application/x-tex">\lambda=0.1</annotation></semantics></math></th>
+<th align="right">Muon，<math><semantics><mrow><mi>λ</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\lambda=0</annotation></semantics></math></th>
+<th align="right">SOAP，<math><semantics><mrow><mi>λ</mi><mo>=</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>4</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\lambda=10^{-4}</annotation></semantics></math></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0.002</td>
+<td align="right"><math><semantics><mrow><mn>14.14</mn><mo>±</mo><mn>0.027</mn></mrow><annotation encoding="application/x-tex">14.14\pm0.027</annotation></semantics></math></td>
+<td align="right"><math><semantics><mrow><mn>14.37</mn><mo>±</mo><mn>0.028</mn></mrow><annotation encoding="application/x-tex">14.37\pm0.028</annotation></semantics></math></td>
+<td align="right"><math><semantics><mrow><mn>14.40</mn><mo>±</mo><mn>0.042</mn></mrow><annotation encoding="application/x-tex">14.40\pm0.042</annotation></semantics></math></td>
+<td align="right"><math><semantics><mrow><mn>14.47</mn><mo>±</mo><mn>0.022</mn></mrow><annotation encoding="application/x-tex">14.47\pm0.022</annotation></semantics></math></td>
+</tr>
+<tr>
+<td>0.004</td>
+<td align="right"><math><semantics><mrow><mn>14.13</mn><mo>±</mo><mn>0.004</mn></mrow><annotation encoding="application/x-tex">14.13\pm0.004</annotation></semantics></math></td>
+<td align="right"><math><semantics><mrow><mn>28.37</mn><mo>±</mo><mn>23.59</mn></mrow><annotation encoding="application/x-tex">28.37\pm23.59</annotation></semantics></math></td>
+<td align="right"><math><semantics><mrow><mn>88.15</mn><mo>±</mo><mn>3.869</mn></mrow><annotation encoding="application/x-tex">88.15\pm3.869</annotation></semantics></math></td>
+<td align="right"><math><semantics><mrow><mn>14.53</mn><mo>±</mo><mn>0.017</mn></mrow><annotation encoding="application/x-tex">14.53\pm0.017</annotation></semantics></math></td>
+</tr>
+</tbody></table></div>
+<p>学习率从 0.002 提到 0.004 后，Muown 的均值保持在 14.1 左右，两个 Muon 设置的困惑度都上升。2.7B 的单种子扫描中，Muown 与 Muon 的最佳稳定困惑度分别为 9.57 和 9.82，对应学习率 0.002 和 0.001。500M 模型在 4 张 GH200 上分片运行时，两者报告的中位步时均为 1.27 秒，包含前向、反向、同步和优化器更新。</p>
+<figure class="experiment-figure" data-figure="muown-scale-decay.png"><button type="button" class="figure-zoom" aria-label="放大实验图：左图是 2.7B 模型的困惑度曲线。右图是 124M 模型在不同权重衰减下的困惑度。"><img src="{{ '/images/optimizer-notes/muown-scale-decay.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>左图是 2.7B 模型的困惑度曲线。右图是 124M 模型在不同权重衰减下的困惑度。</figcaption></figure>
+<figure class="experiment-figure" data-figure="muown-width-sweep.png"><button type="button" class="figure-zoom" aria-label="放大实验图：三种模型宽度下的学习率扫描。左图为 Muown，右图为 Muon。"><img src="{{ '/images/optimizer-notes/muown-width-sweep.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>三种模型宽度下的学习率扫描。左图为 Muown，右图为 Muon。</figcaption></figure>
+<p><span id="angular-muown"></span></p>
+<h3>4. AngularMuown：显式调度转角</h3>
+<h4>同样的位移，为什么转角会变小</h4>
+<p>设一行的方向朝右。若内部向量是 <math><semantics><mrow><mo stretchy="false">(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(1,0)</annotation></semantics></math>，向上加 0.2，得到 <math><semantics><mrow><mo stretchy="false">(</mo><mn>1</mn><mo>,</mo><mn>0.2</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(1,0.2)</annotation></semantics></math>，转角约为 <math><semantics><mrow><msup><mn>11.31</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">11.31^\circ</annotation></semantics></math>。若内部向量是 <math><semantics><mrow><mo stretchy="false">(</mo><mn>4</mn><mo>,</mo><mn>0</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(4,0)</annotation></semantics></math>，加同样的位移，得到 <math><semantics><mrow><mo stretchy="false">(</mo><mn>4</mn><mo>,</mo><mn>0.2</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(4,0.2)</annotation></semantics></math>，转角只有 <math><semantics><mrow><msup><mn>2.86</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">2.86^\circ</annotation></semantics></math>。两个起点的单位方向相同。若增益 <math><semantics><mrow><mi>g</mi></mrow><annotation encoding="application/x-tex">g</annotation></semantics></math> 也相同，前向传播中的权重完全相同。</p>
+<p>把 <math><semantics><mrow><msub><mi>R</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><msub><mi>r</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><msub><mi>U</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow><annotation encoding="application/x-tex">R_{t,i}=r_{t,i}U_{t,i}</annotation></semantics></math> 代回 Muown 的更新，然后提出正因子 <math><semantics><mrow><msub><mi>r</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow><annotation encoding="application/x-tex">r_{t,i}</annotation></semantics></math>。逐行归一化会消掉这个因子，留下单位行上的实际位移。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>U</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>−</mo><mfrac><mrow><msub><mi>η</mi><mi>t</mi></msub><msub><mi>s</mi><mrow><mi>m</mi><mo>,</mo><mi>n</mi></mrow></msub></mrow><mrow><msub><mi>r</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow></mfrac><msub><mi>Q</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">U_{t,i}-\frac{\eta_t s_{m,n}}{r_{t,i}}Q_{t,i}.</annotation></semantics></math></div>
+
+<p>若候选位移为 <math><semantics><mrow><msub><mi>ξ</mi><mi>i</mi></msub><mo>=</mo><msub><mi>ξ</mi><mrow><mo>∥</mo></mrow></msub><msub><mi>U</mi><mi>i</mi></msub><mo>+</mo><msub><mi>ξ</mi><mrow><mo>⊥</mo></mrow></msub></mrow><annotation encoding="application/x-tex">\xi_i=\xi_{\parallel}U_i+\xi_{\perp}</annotation></semantics></math>，它沿旧方向的分量是 <math><semantics><mrow><msub><mi>ξ</mi><mrow><mo>∥</mo></mrow></msub></mrow><annotation encoding="application/x-tex">\xi_{\parallel}</annotation></semantics></math>，垂直分量是 <math><semantics><mrow><msub><mi>ξ</mi><mrow><mo>⊥</mo></mrow></msub></mrow><annotation encoding="application/x-tex">\xi_{\perp}</annotation></semantics></math>。加上位移后，这两个方向上的长度分别为 <math><semantics><mrow><mn>1</mn><mo>+</mo><msub><mi>ξ</mi><mrow><mo>∥</mo></mrow></msub></mrow><annotation encoding="application/x-tex">1+\xi_{\parallel}</annotation></semantics></math> 和 <math><semantics><mrow><mo stretchy="false">‖</mo><msub><mi>ξ</mi><mrow><mo>⊥</mo></mrow></msub><msub><mo stretchy="false">‖</mo><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">\lVert\xi_{\perp}\rVert_2</annotation></semantics></math>，转角可直接用它们计算。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>θ</mi><mi>i</mi></msub><mo>=</mo><mi mathvariant="normal">atan2</mi><mo stretchy="false">(</mo><mo stretchy="false">‖</mo><msub><mi>ξ</mi><mrow><mo>⊥</mo></mrow></msub><msub><mo stretchy="false">‖</mo><mn>2</mn></msub><mo>,</mo><mn>1</mn><mo>+</mo><msub><mi>ξ</mi><mrow><mo>∥</mo></mrow></msub><mo stretchy="false">)</mo><mo>.</mo></mrow><annotation encoding="application/x-tex">\theta_i=\operatorname{atan2}(\lVert\xi_{\perp}\rVert_2,1+\xi_{\parallel}).</annotation></semantics></math></div>
+
+<p>在 Muown 中，<math><semantics><mrow><msub><mi>r</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow><annotation encoding="application/x-tex">r_{t,i}</annotation></semantics></math> 越大，给定矩阵更新在单位行上走得越短。训练中若 <math><semantics><mrow><msub><mi>r</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow><annotation encoding="application/x-tex">r_{t,i}</annotation></semantics></math> 逐渐增长，转角就会被这项隐式压小。AngularMuown 把方向变量固定为单位行，用单独的 <math><semantics><mrow><msub><mi>κ</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">\kappa_t</annotation></semantics></math> 调节方向步幅。</p>
+<h4>在单位行上更新，再归一化</h4>
+<p>仍令 <math><semantics><mrow><msub><mi>W</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><msub><mi>g</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><msub><mi>U</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow><annotation encoding="application/x-tex">W_{t,i}=g_{t,i}U_{t,i}</annotation></semantics></math>。增益梯度沿用 Muown 的计算方式。方向梯度扣掉沿 <math><semantics><mrow><msub><mi>U</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow><annotation encoding="application/x-tex">U_{t,i}</annotation></semantics></math> 的分量，再乘增益。这里的方向变量就是单位行，所以公式中少了 Muown 的除数 <math><semantics><mrow><msub><mi>r</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow><annotation encoding="application/x-tex">r_{t,i}</annotation></semantics></math>。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>h</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><mo stretchy="false">⟨</mo><msub><mi>G</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>,</mo><msub><mi>U</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo stretchy="false">⟩</mo><mo>,</mo><mspace width="2em"/><msub><mi>H</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><msub><mi>g</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo stretchy="false">(</mo><msub><mi>G</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>−</mo><msub><mi>h</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><msub><mi>U</mi><mrow><mi>t</mi><mo>,</mo><mi>i</mi></mrow></msub><mo stretchy="false">)</mo><mo>.</mo></mrow><annotation encoding="application/x-tex">h_{t,i}=\langle G_{t,i},U_{t,i}\rangle,\qquad
+H_{t,i}=g_{t,i}(G_{t,i}-h_{t,i}U_{t,i}).</annotation></semantics></math></div>
+
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>M</mi><mi>t</mi></msub><mo>=</mo><mi>μ</mi><msub><mi>M</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><msub><mi>H</mi><mi>t</mi></msub><mo>,</mo><mspace width="2em"/><msub><mi>Q</mi><mi>t</mi></msub><mo>=</mo><mi mathvariant="normal">Orth</mi><mo stretchy="false">(</mo><msub><mi>H</mi><mi>t</mi></msub><mo>+</mo><mi>μ</mi><msub><mi>M</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>.</mo></mrow><annotation encoding="application/x-tex">M_t=\mu M_{t-1}+H_t,\qquad Q_t=\operatorname{Orth}(H_t+\mu M_t).</annotation></semantics></math></div>
+
+<p>方向梯度经过动量和正交化后得到 <math><semantics><mrow><msub><mi>Q</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">Q_t</annotation></semantics></math>。正交化会混合各行的信息，<math><semantics><mrow><msub><mi>Q</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">Q_t</annotation></semantics></math> 的每一行可以带有沿旧方向的分量。用它更新后，再逐行除以行范数，把每行拉回单位长度。增益分支仍按基础学习率执行 Adam。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>U</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mi mathvariant="normal">RowNorm</mi><mo stretchy="false">(</mo><msub><mi>U</mi><mi>t</mi></msub><mo>−</mo><msub><mi>η</mi><mi>t</mi></msub><msub><mi>κ</mi><mi>t</mi></msub><msub><mi>s</mi><mrow><mi>m</mi><mo>,</mo><mi>n</mi></mrow></msub><msub><mi>Q</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">U_{t+1}=\operatorname{RowNorm}(U_t-\eta_t\kappa_t s_{m,n}Q_t),</annotation></semantics></math></div>
+
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>g</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mi mathvariant="normal">AdamStep</mi><mo stretchy="false">(</mo><msub><mi>g</mi><mi>t</mi></msub><mo>,</mo><msub><mi>h</mi><mi>t</mi></msub><mo>,</mo><msub><mi>η</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>,</mo><mspace width="2em"/><msub><mi>W</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mi mathvariant="normal">Diag</mi><mo stretchy="false">(</mo><msub><mi>g</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false">)</mo><msub><mi>U</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">g_{t+1}=\operatorname{AdamStep}(g_t,h_t,\eta_t),\qquad
+W_{t+1}=\operatorname{Diag}(g_{t+1})U_{t+1}.</annotation></semantics></math></div>
+
+<p>角度乘子的调度为 <math><semantics><mrow><msub><mi>κ</mi><mi>t</mi></msub><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo>+</mo><mi>c</mi><mo stretchy="false">(</mo><mi>t</mi><mo>−</mo><msub><mi>t</mi><mi>w</mi></msub><msub><mo stretchy="false">)</mo><mo>+</mo></msub><msup><mo stretchy="false">)</mo><mrow><mo>−</mo><mi>q</mi></mrow></msup></mrow><annotation encoding="application/x-tex">\kappa_t=(1+c(t-t_w)_+)^{-q}</annotation></semantics></math>。<math><semantics><mrow><msub><mi>t</mi><mi>w</mi></msub></mrow><annotation encoding="application/x-tex">t_w</annotation></semantics></math> 之前取 1。以 <math><semantics><mrow><mi>c</mi><mo>=</mo><mn>0.001</mn></mrow><annotation encoding="application/x-tex">c=0.001</annotation></semantics></math>、<math><semantics><mrow><mi>q</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">q=1</annotation></semantics></math> 为例，过了预热 1000 步后取 0.5，过了 3000 步后取 0.25。在相同基础学习率下，这个系数只缩小方向分支的位移。默认形状因子为 <math><semantics><mrow><msub><mi>s</mi><mrow><mi>m</mi><mo>,</mo><mi>n</mi></mrow></msub><mo>=</mo><msqrt><mrow><mi mathvariant="normal">max</mi><mo stretchy="false">(</mo><mn>1</mn><mo>,</mo><mi>m</mi><mo>/</mo><mi>n</mi><mo stretchy="false">)</mo></mrow></msqrt></mrow><annotation encoding="application/x-tex">s_{m,n}=\sqrt{\max(1,m/n)}</annotation></semantics></math>，用于对齐不同形状矩阵的行更新尺度。主要实验用 PolarExpress 做正交化，MoE 实验用 5 步 Newton–Schulz。</p>
+<h4>实验验证</h4>
+<p>作者在 FineWeb-Edu 上训练 124M 模型，训练量为 2.5B tokens。他们直接量每行更新前后的夹角，再取平均。使用衰减乘子时，平均转角随训练减小。乘子固定为 1 时，平均转角在训练中段较平稳。随后在 Qwen2-0.5B 上比较不同基础学习率，得到下表的验证损失。</p>
+<figure class="experiment-figure" data-figure="angular-loss-rotation.png"><button type="button" class="figure-zoom" aria-label="放大实验图：124M 模型训练 2.5B tokens。左图是验证损失，右图是每步平均行方向转角。"><img src="{{ '/images/optimizer-notes/angular-loss-rotation.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>124M 模型训练 2.5B tokens。左图是验证损失，右图是每步平均行方向转角。</figcaption></figure>
+<figure class="experiment-figure" data-figure="angular-token-budgets.png"><button type="button" class="figure-zoom" aria-label="放大实验图：124M 模型在不同 token 预算下的验证损失。各条分支从不同训练检查点进入学习率衰减。"><img src="{{ '/images/optimizer-notes/angular-token-budgets.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>124M 模型在不同 token 预算下的验证损失。各条分支从不同训练检查点进入学习率衰减。</figcaption></figure>
+<div class="table-wrap" tabindex="0" aria-label="可横向滚动的对照表"><table>
+<thead>
+<tr>
+<th>Qwen2-0.5B 基础学习率</th>
+<th align="right">角度衰减</th>
+<th align="right">常数角度乘子</th>
+<th align="right">NorMuon</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0.004</td>
+<td align="right">2.862</td>
+<td align="right">2.700</td>
+<td align="right">2.713</td>
+</tr>
+<tr>
+<td>0.006</td>
+<td align="right">2.792</td>
+<td align="right"><strong>2.694</strong></td>
+<td align="right">2.701</td>
+</tr>
+<tr>
+<td>0.020</td>
+<td align="right">2.662</td>
+<td align="right">2.767</td>
+<td align="right">2.718</td>
+</tr>
+<tr>
+<td>0.040</td>
+<td align="right"><strong>2.648</strong></td>
+<td align="right">2.873</td>
+<td align="right">2.749</td>
+</tr>
+</tbody></table></div>
+<p>Qwen2-0.5B 的完整扫描中，衰减版在更大的基础学习率上取得最低验证损失。</p>
+<figure class="experiment-figure" data-figure="angular-width-sweep.png"><button type="button" class="figure-zoom" aria-label="放大实验图：AngularMuown 在三种模型宽度下的学习率扫描。圈出的点标记各曲线在扫描网格内的最低验证损失。"><img src="{{ '/images/optimizer-notes/angular-width-sweep.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>AngularMuown 在三种模型宽度下的学习率扫描。圈出的点标记各曲线在扫描网格内的最低验证损失。</figcaption></figure>
+<p>在总参数 1.1B、激活参数 370M 的 MoE 实验中，AngularMuown 的两种形状缩放给出最低验证损失 2.4807（RMS 匹配）和 2.4914（谱条件缩放），Muon 为 2.5255。各值均为对应学习率网格中的最优结果。</p>
+<p><span id="heavy-tailed-muon"></span></p>
+<h3>5. 重尾噪声下的 Muon</h3>
+<h4>动机：梯度噪声大时，怎样公平比较 Muon 和欧氏方法</h4>
+<p>训练中用一个小批量算出的梯度，等于真实梯度加上采样误差。如果偶尔出现特别大的误差，平方后它对方差的贡献会非常大。举个例子，假设误差的绝对值为 <math><semantics><mrow><msup><mn>2</mn><mi>k</mi></msup></mrow><annotation encoding="application/x-tex">2^k</annotation></semantics></math> 的概率与 <math><semantics><mrow><msup><mn>4</mn><mrow><mo>−</mo><mi>k</mi></mrow></msup></mrow><annotation encoding="application/x-tex">4^{-k}</annotation></semantics></math> 成正比。每个量级对二阶矩的贡献相同，累加后发散。改算 1.5 阶矩，每个量级的贡献按 <math><semantics><mrow><msup><mn>2</mn><mrow><mo>−</mo><mi>k</mi><mo>/</mo><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2^{-k/2}</annotation></semantics></math> 衰减，累加后有限。Hübler、Pethick 与 Sra 用这种「较低阶矩有限」的假设研究 Muon。</p>
+<p>比较前还要规定怎样算「接近驻点」。给更新矩阵 <math><semantics><mrow><mi>D</mi></mrow><annotation encoding="application/x-tex">D</annotation></semantics></math> 一个单位步幅预算，当前梯度 <math><semantics><mrow><mi>G</mi></mrow><annotation encoding="application/x-tex">G</annotation></semantics></math> 能带来的最大一阶下降量，就是梯度的对偶范数。欧氏方法用 Frobenius 范数限制 <math><semantics><mrow><mi>D</mi></mrow><annotation encoding="application/x-tex">D</annotation></semantics></math>，对应的下降量是 <math><semantics><mrow><mo stretchy="false">‖</mo><mi>G</mi><msub><mo stretchy="false">‖</mo><mi>F</mi></msub></mrow><annotation encoding="application/x-tex">\lVert G\rVert_F</annotation></semantics></math>。Muon 用谱范数限制 <math><semantics><mrow><mi>D</mi></mrow><annotation encoding="application/x-tex">D</annotation></semantics></math>，对应的下降量是核范数 <math><semantics><mrow><mo stretchy="false">‖</mo><mi>G</mi><msub><mo stretchy="false">‖</mo><mo>∗</mo></msub></mrow><annotation encoding="application/x-tex">\lVert G\rVert_*</annotation></semantics></math>。核范数把奇异值直接相加。如果一个梯度有 100 个大小相同的奇异值，它的核范数是 Frobenius 范数的 10 倍。此时达到相同的 <math><semantics><mrow><mi>ε</mi></mrow><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>，核范数提出了更严格的要求。</p>
+<p>论文据此给两条路线设同一个目标。对 Muon 直接分析核范数驻点。对已有的欧氏保证，先求出需要多小的 Frobenius 范数，才能推出相同的核范数精度。比较的是达到这个目标所需的随机梯度调用次数。</p>
+<h4>模型假设与更新规则</h4>
+<p>设 <math><semantics><mrow><mi>F</mi><mo stretchy="false">(</mo><mi>W</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">F(W)</annotation></semantics></math> 为总体损失，<math><semantics><mrow><msub><mi>G</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">G_t</annotation></semantics></math> 为在 <math><semantics><mrow><msub><mi>W</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">W_t</annotation></semantics></math> 处采到的随机梯度。用 <math><semantics><mrow><msub><mi>Z</mi><mi>t</mi></msub><mo>=</mo><msub><mi>G</mi><mi>t</mi></msub><mo>−</mo><mo>∇</mo><mi>F</mi><mo stretchy="false">(</mo><msub><mi>W</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">Z_t=G_t-\nabla F(W_t)</annotation></semantics></math> 表示采样误差。假设每步的随机梯度无偏，初始损失与下界相差至多 <math><semantics><mrow><msub><mi>Δ</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">\Delta_1</annotation></semantics></math>，并对每个查询点要求</p>
+<div class="math-display"><math display="block"><semantics><mrow><mi mathvariant="normal">𝔼</mi><mo stretchy="false">‖</mo><msub><mi>Z</mi><mi>t</mi></msub><msubsup><mo stretchy="false">‖</mo><mo>∗</mo><mi>p</mi></msubsup><mo>≤</mo><msup><mi>σ</mi><mi>p</mi></msup><mo>,</mo><mspace width="2em"/><mn>1</mn><mo>&lt;</mo><mi>p</mi><mo>≤</mo><mn>2</mn><mo>.</mo></mrow><annotation encoding="application/x-tex">\mathbb E\lVert Z_t\rVert_*^p\le\sigma^p,\qquad 1&lt;p\le 2.</annotation></semantics></math></div>
+
+<p><math><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math> 是在核范数下量出的噪声尺度，<math><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math> 是所假设的有限矩阶数。<math><semantics><mrow><mi>p</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">p=2</annotation></semantics></math> 对应有界二阶矩。常数 <math><semantics><mrow><mi>L</mi></mrow><annotation encoding="application/x-tex">L</annotation></semantics></math> 则限制真实梯度变化的速度。权重移动的谱范数乘上 <math><semantics><mrow><mi>L</mi></mrow><annotation encoding="application/x-tex">L</annotation></semantics></math>，给出梯度变化的核范数上界。</p>
+<p>理论里的 Muon 用 EMA 累积梯度，然后沿动量矩阵的精确极因子走一步。第一节中的有限步 Newton–Schulz 在工程上近似计算这一方向。</p>
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>M</mi><mi>t</mi></msub><mo>=</mo><mi>β</mi><msub><mi>M</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>β</mi><mo stretchy="false">)</mo><msub><mi>G</mi><mi>t</mi></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">M_t=\beta M_{t-1}+(1-\beta)G_t.</annotation></semantics></math></div>
+
+<div class="math-display"><math display="block"><semantics><mrow><msub><mi>W</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>W</mi><mi>t</mi></msub><mo>−</mo><mi>η</mi><mi>Q</mi><mo stretchy="false">(</mo><msub><mi>M</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>.</mo></mrow><annotation encoding="application/x-tex">W_{t+1}=W_t-\eta Q(M_t).</annotation></semantics></math></div>
+
+<h4>证明怎样处理重尾噪声</h4>
+<p>如果 <math><semantics><mrow><msub><mi>M</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">M_t</annotation></semantics></math> 等于真实梯度，线性近似的下降量就是 <math><semantics><mrow><mi>η</mi><mo stretchy="false">‖</mo><mo>∇</mo><mi>F</mi><mo stretchy="false">(</mo><msub><mi>W</mi><mi>t</mi></msub><mo stretchy="false">)</mo><msub><mo stretchy="false">‖</mo><mo>∗</mo></msub></mrow><annotation encoding="application/x-tex">\eta\lVert\nabla F(W_t)\rVert_*</annotation></semantics></math>。实际用的是估出来的动量。令 <math><semantics><mrow><msub><mi>e</mi><mi>t</mi></msub><mo>=</mo><mo stretchy="false">‖</mo><msub><mi>M</mi><mi>t</mi></msub><mo>−</mo><mo>∇</mo><mi>F</mi><mo stretchy="false">(</mo><msub><mi>W</mi><mi>t</mi></msub><mo stretchy="false">)</mo><msub><mo stretchy="false">‖</mo><mo>∗</mo></msub></mrow><annotation encoding="application/x-tex">e_t=\lVert M_t-\nabla F(W_t)\rVert_*</annotation></semantics></math>，单步损失满足</p>
+<div class="math-display"><math display="block"><semantics><mrow><mi>F</mi><mo stretchy="false">(</mo><msub><mi>W</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false">)</mo><mo>−</mo><mi>F</mi><mo stretchy="false">(</mo><msub><mi>W</mi><mi>t</mi></msub><mo stretchy="false">)</mo><mo>≤</mo><mo>−</mo><mi>η</mi><mo stretchy="false">‖</mo><mo>∇</mo><mi>F</mi><mo stretchy="false">(</mo><msub><mi>W</mi><mi>t</mi></msub><mo stretchy="false">)</mo><msub><mo stretchy="false">‖</mo><mo>∗</mo></msub><mo>+</mo><mn>2</mn><mi>η</mi><msub><mi>e</mi><mi>t</mi></msub><mo>+</mo><mfrac><mrow><mi>L</mi><msup><mi>η</mi><mn>2</mn></msup></mrow><mrow><mn>2</mn></mrow></mfrac><mo>.</mo></mrow><annotation encoding="application/x-tex">F(W_{t+1})-F(W_t)
+\le -\eta\lVert\nabla F(W_t)\rVert_*+2\eta e_t+\frac{L\eta^2}{2}.</annotation></semantics></math></div>
+
+<p>动量误差来自两处。每次采样都带噪声，平均更多梯度可以降低这部分误差。平均窗口越长，留下的旧梯度也越多，而参数已经走到了新位置。令 <math><semantics><mrow><mi>δ</mi><mo>=</mo><mn>1</mn><mo>−</mo><mi>β</mi></mrow><annotation encoding="application/x-tex">\delta=1-\beta</annotation></semantics></math>，窗口长度的量级是 <math><semantics><mrow><mn>1</mn><mo>/</mo><mi>δ</mi></mrow><annotation encoding="application/x-tex">1/\delta</annotation></semantics></math>。每步移动至多 <math><semantics><mrow><mi>η</mi></mrow><annotation encoding="application/x-tex">\eta</annotation></semantics></math>，所以旧梯度的误差量级是 <math><semantics><mrow><mi>L</mi><mi>η</mi><mo>/</mo><mi>δ</mi></mrow><annotation encoding="application/x-tex">L\eta/\delta</annotation></semantics></math>。</p>
+<p>随机噪声这部分更难。核范数有折角，难以直接用矩不等式来控制带符号的噪声和。比如矩阵 <math><semantics><mrow><mi mathvariant="normal">diag</mi><mo stretchy="false">(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\operatorname{diag}(1,0)</annotation></semantics></math> 的第二个对角元加上 <math><semantics><mrow><mi>δ</mi></mrow><annotation encoding="application/x-tex">\delta</annotation></semantics></math> 或 <math><semantics><mrow><mo>−</mo><mi>δ</mi></mrow><annotation encoding="application/x-tex">-\delta</annotation></semantics></math>，核范数都会从 1 变成 <math><semantics><mrow><mn>1</mn><mo>+</mo><mo stretchy="false">|</mo><mi>δ</mi><mo stretchy="false">|</mo></mrow><annotation encoding="application/x-tex">1+\lvert\delta\rvert</annotation></semantics></math>。论文改在 <strong>Schatten-<math><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math> 范数</strong>下做平均。它把奇异值当成向量来取 <math><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math> 范数，允许用 <math><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math> 阶矩控制噪声累积。最后才用下式换回核范数，其中 <math><semantics><mrow><mi>d</mi><mo>=</mo><mi mathvariant="normal">min</mi><mo stretchy="false">(</mo><mi>m</mi><mo>,</mo><mi>n</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">d=\min(m,n)</annotation></semantics></math>。</p>
+<div class="math-display"><math display="block"><semantics><mrow><mo stretchy="false">‖</mo><mi>Z</mi><msub><mo stretchy="false">‖</mo><mo>∗</mo></msub><mo>≤</mo><msup><mi>d</mi><mrow><mn>1</mn><mo>−</mo><mn>1</mn><mo>/</mo><mi>p</mi></mrow></msup><mo stretchy="false">‖</mo><mi>Z</mi><msub><mo stretchy="false">‖</mo><mrow><msub><mi>S</mi><mi>p</mi></msub></mrow></msub><mo>.</mo></mrow><annotation encoding="application/x-tex">\lVert Z\rVert_*\le d^{1-1/p}\lVert Z\rVert_{S_p}.</annotation></semantics></math></div>
+
+<p><math><semantics><mrow><mi>p</mi><mo>=</mo><mn>1.5</mn></mrow><annotation encoding="application/x-tex">p=1.5</annotation></semantics></math> 时，这一步的因子是 <math><semantics><mrow><msup><mi>d</mi><mrow><mn>1</mn><mo>/</mo><mn>3</mn></mrow></msup></mrow><annotation encoding="application/x-tex">d^{1/3}</annotation></semantics></math>。若从 Frobenius 范数换回核范数，因子是 <math><semantics><mrow><msup><mi>d</mi><mrow><mn>1</mn><mo>/</mo><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">d^{1/2}</annotation></semantics></math>。Schatten-<math><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math> 在这两件事之间取得平衡。它能用已有的 <math><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math> 阶矩分析随机和，同时比 Frobenius 范数更接近核范数。算法本身一直用谱范数选方向，Schatten-<math><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math> 出现在证明中。</p>
+<h4>主要结论：维度代价从哪里省下来</h4>
+<p>对 EMA 加权后的噪声，主要误差项的量级是 <math><semantics><mrow><mi>σ</mi><mo stretchy="false">(</mo><mi>d</mi><mi>δ</mi><msup><mo stretchy="false">)</mo><mrow><mo stretchy="false">(</mo><mi>p</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo><mo>/</mo><mi>p</mi></mrow></msup></mrow><annotation encoding="application/x-tex">\sigma(d\delta)^{(p-1)/p}</annotation></semantics></math>。要让它小到 <math><semantics><mrow><mi>ε</mi></mrow><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>，可以取 <math><semantics><mrow><mi>δ</mi></mrow><annotation encoding="application/x-tex">\delta</annotation></semantics></math> 的量级为 <math><semantics><mrow><mo stretchy="false">(</mo><mi>ε</mi><mo>/</mo><mi>σ</mi><msup><mo stretchy="false">)</mo><mrow><mi>p</mi><mo>/</mo><mo stretchy="false">(</mo><mi>p</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow></msup><mo>/</mo><mi>d</mi></mrow><annotation encoding="application/x-tex">(\varepsilon/\sigma)^{p/(p-1)}/d</annotation></semantics></math>。为了让旧梯度误差 <math><semantics><mrow><mi>L</mi><mi>η</mi><mo>/</mo><mi>δ</mi></mrow><annotation encoding="application/x-tex">L\eta/\delta</annotation></semantics></math> 也保持在 <math><semantics><mrow><mi>ε</mi></mrow><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math> 量级，步长取 <math><semantics><mrow><mi>ε</mi><mi>δ</mi><mo>/</mo><mi>L</mi></mrow><annotation encoding="application/x-tex">\varepsilon\delta/L</annotation></semantics></math> 量级。累加 <math><semantics><mrow><mi>T</mi></mrow><annotation encoding="application/x-tex">T</annotation></semantics></math> 步后，初始损失差摊到每步是 <math><semantics><mrow><msub><mi>Δ</mi><mn>1</mn></msub><mo>/</mo><mo stretchy="false">(</mo><mi>η</mi><mi>T</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\Delta_1/(\eta T)</annotation></semantics></math>。这项也降到 <math><semantics><mrow><mi>ε</mi></mrow><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math> 时，得到主导调用次数。</p>
+<div class="math-display"><math display="block"><semantics><mrow><mi>T</mi><mo>=</mo><mi>O</mi><mo stretchy="false">(</mo><mi>d</mi><mfrac><mrow><msub><mi>Δ</mi><mn>1</mn></msub><mi>L</mi></mrow><mrow><msup><mi>ε</mi><mn>2</mn></msup></mrow></mfrac><mo stretchy="false">(</mo><mfrac><mrow><mi>σ</mi></mrow><mrow><mi>ε</mi></mrow></mfrac><msup><mo stretchy="false">)</mo><mrow><mi>p</mi><mo>/</mo><mo stretchy="false">(</mo><mi>p</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow></msup><mo stretchy="false">)</mo><mo>.</mo></mrow><annotation encoding="application/x-tex">T=O\left(d\frac{\Delta_1 L}{\varepsilon^2}
+\left(\frac{\sigma}{\varepsilon}\right)^{p/(p-1)}\right).</annotation></semantics></math></div>
+
+<p>定理控制的是 <math><semantics><mrow><mi>T</mi></mrow><annotation encoding="application/x-tex">T</annotation></semantics></math> 步梯度核范数的平均期望。等价地，从这些迭代点中均匀抽取一个点，它的梯度核范数期望至多为 <math><semantics><mrow><mi>ε</mi></mrow><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>。这里的一次调用是取一次随机梯度。每次更新在 GPU 上的成本需要另外计算。</p>
+<p>欧氏路线的计算可以直接代入。由 <math><semantics><mrow><mo stretchy="false">‖</mo><mi>G</mi><msub><mo stretchy="false">‖</mo><mo>∗</mo></msub><mo>≤</mo><msqrt><mi>d</mi></msqrt><mspace width=".17em"/><mo stretchy="false">‖</mo><mi>G</mi><msub><mo stretchy="false">‖</mo><mi>F</mi></msub></mrow><annotation encoding="application/x-tex">\lVert G\rVert_*\le\sqrt d\,\lVert G\rVert_F</annotation></semantics></math>，要保证核范数达到 <math><semantics><mrow><mi>ε</mi></mrow><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>，可把 Frobenius 精度设为 <math><semantics><mrow><mi>ε</mi><mo>/</mo><msqrt><mi>d</mi></msqrt></mrow><annotation encoding="application/x-tex">\varepsilon/\sqrt d</annotation></semantics></math>。已有欧氏上界对精度的依赖是 <math><semantics><mrow><msup><mi>ε</mi><mrow><mo>−</mo><mo stretchy="false">(</mo><mn>2</mn><mo>+</mo><mi>p</mi><mo>/</mo><mo stretchy="false">(</mo><mi>p</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo><mo stretchy="false">)</mo></mrow></msup></mrow><annotation encoding="application/x-tex">\varepsilon^{-(2+p/(p-1))}</annotation></semantics></math>。代入这个更严格的精度，便得到欧氏路线的维度因子 <math><semantics><mrow><msup><mi>d</mi><mrow><mo stretchy="false">(</mo><mn>3</mn><mi>p</mi><mo>−</mo><mn>2</mn><mo stretchy="false">)</mo><mo>/</mo><mo stretchy="false">(</mo><mn>2</mn><mo stretchy="false">(</mo><mi>p</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo><mo stretchy="false">)</mo></mrow></msup></mrow><annotation encoding="application/x-tex">d^{(3p-2)/(2(p-1))}</annotation></semantics></math>。下表用统一的精度目标和参数上界比较两条路线。</p>
+<div class="table-wrap" tabindex="0" aria-label="可横向滚动的对照表"><table>
+<thead>
+<tr>
+<th>噪声假设</th>
+<th>主导调用次数随精度的变化</th>
+<th>Muon 的维度因子</th>
+<th>欧氏上界换算后的维度因子</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><math><semantics><mrow><mi>p</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">p=2</annotation></semantics></math></td>
+<td><math><semantics><mrow><msup><mi>ε</mi><mrow><mo>−</mo><mn>4</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\varepsilon^{-4}</annotation></semantics></math></td>
+<td><math><semantics><mrow><mi>d</mi></mrow><annotation encoding="application/x-tex">d</annotation></semantics></math></td>
+<td><math><semantics><mrow><msup><mi>d</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">d^2</annotation></semantics></math></td>
+</tr>
+<tr>
+<td><math><semantics><mrow><mi>p</mi><mo>=</mo><mn>1.5</mn></mrow><annotation encoding="application/x-tex">p=1.5</annotation></semantics></math></td>
+<td><math><semantics><mrow><msup><mi>ε</mi><mrow><mo>−</mo><mn>5</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\varepsilon^{-5}</annotation></semantics></math></td>
+<td><math><semantics><mrow><mi>d</mi></mrow><annotation encoding="application/x-tex">d</annotation></semantics></math></td>
+<td><math><semantics><mrow><msup><mi>d</mi><mrow><mn>2.5</mn></mrow></msup></mrow><annotation encoding="application/x-tex">d^{2.5}</annotation></semantics></math></td>
+</tr>
+</tbody></table></div>
+<p>例如 <math><semantics><mrow><mi>p</mi><mo>=</mo><mn>1.5</mn></mrow><annotation encoding="application/x-tex">p=1.5</annotation></semantics></math>、矩阵短边 <math><semantics><mrow><mi>d</mi><mo>=</mo><mn>100</mn></mrow><annotation encoding="application/x-tex">d=100</annotation></semantics></math> 时，表中两个维度因子是 100 和 100,000。重尾加大了提高精度的代价，而 Muon 上界中的维度因子仍是线性的。</p>
+<p><strong>线性的 <math><semantics><mrow><mi>d</mi></mrow><annotation encoding="application/x-tex">d</annotation></semantics></math> 还能省掉吗？</strong> 第一个下界构造把未知信息放在 <math><semantics><mrow><mi>d</mi></mrow><annotation encoding="application/x-tex">d</annotation></semantics></math> 个方向上。每次调用有小概率揭示一个方向的符号，噪声越大，有效信息出现得越少。在定理的精度范围内，随机一阶算法在最坏情况下至少要调用约 <math><semantics><mrow><mi>d</mi><mo stretchy="false">(</mo><mi>σ</mi><mo>/</mo><mi>ε</mi><msup><mo stretchy="false">)</mo><mrow><mi>p</mi><mo>/</mo><mo stretchy="false">(</mo><mi>p</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow></msup></mrow><annotation encoding="application/x-tex">d(\sigma/\varepsilon)^{p/(p-1)}</annotation></semantics></math> 次。第二个构造把多个困难子问题嵌进矩阵，当矩阵长边达到 <math><semantics><mrow><mi>d</mi><msub><mi>Δ</mi><mn>1</mn></msub><mi>L</mi><mo>/</mo><msup><mi>ε</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">d\Delta_1 L/\varepsilon^2</annotation></semantics></math> 且目标精度充分高时，对零保持算法得到与主导上界同阶的下界。零保持指迭代只在已有梯度触及的坐标上产生非零分量。</p>
+<h4>一般结论：谱范数之外还有哪些选择</h4>
+<p>这套分析也适用于其他带动量的归一化最速下降。若对偶范数具有维度无关的 <math><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math> 阶一致光滑常数，就能直接在该范数下控制噪声和，主导调用次数中没有额外的维度因子。对矩阵，取 <math><semantics><mrow><mn>2</mn><mo>≤</mo><mi>r</mi><mo>≤</mo><mi>p</mi><mo>/</mo><mo stretchy="false">(</mo><mi>p</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">2\le r\le p/(p-1)</annotation></semantics></math>，用 Schatten-<math><semantics><mrow><mi>r</mi></mrow><annotation encoding="application/x-tex">r</annotation></semantics></math> 约束更新，就落在这类保证内。</p>
+<p>例如 <math><semantics><mrow><mi>p</mi><mo>=</mo><mn>1.5</mn></mrow><annotation encoding="application/x-tex">p=1.5</annotation></semantics></math> 时，取 <math><semantics><mrow><mi>r</mi><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">r=3</annotation></semantics></math>，对偶正好是 Schatten-1.5。这个驻点要求比 Frobenius 更强，理论上仍可直接在该范数里控制噪声。谱范数是 <math><semantics><mrow><mi>r</mi></mrow><annotation encoding="application/x-tex">r</annotation></semantics></math> 趋于无穷的情况，对偶是核范数，因而需要上面的范数换算。设计优化器时，更新约束、驻点标准和噪声分析要一起选。</p>
+<h4>实验：改变矩阵更新所用的范数</h4>
+<p>作者从头训练 70M Pythia，使用 FineWeb-Edu 的 1.4B tokens，比较几种 Schatten 更新约束。每种约束都扫描学习率。表中列出各自最佳学习率下的最终困惑度，数值为三个随机种子的均值和标准差。</p>
+<div class="table-wrap" tabindex="0" aria-label="可横向滚动的对照表"><table>
+<thead>
+<tr>
+<th>更新约束</th>
+<th align="right">最佳学习率</th>
+<th align="right">最终困惑度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Schatten-2（Frobenius）</td>
+<td align="right">0.015</td>
+<td align="right"><math><semantics><mrow><mn>40.18</mn><mo>±</mo><mn>0.09</mn></mrow><annotation encoding="application/x-tex">40.18\pm0.09</annotation></semantics></math></td>
+</tr>
+<tr>
+<td>Schatten-3</td>
+<td align="right">0.030</td>
+<td align="right"><math><semantics><mrow><mn>34.51</mn><mo>±</mo><mn>0.13</mn></mrow><annotation encoding="application/x-tex">34.51\pm0.13</annotation></semantics></math></td>
+</tr>
+<tr>
+<td>Schatten-4</td>
+<td align="right">0.030</td>
+<td align="right"><math><semantics><mrow><mn>33.54</mn><mo>±</mo><mn>0.04</mn></mrow><annotation encoding="application/x-tex">33.54\pm0.04</annotation></semantics></math></td>
+</tr>
+<tr>
+<td>Schatten-8</td>
+<td align="right">0.015</td>
+<td align="right"><math><semantics><mrow><mn>33.02</mn><mo>±</mo><mn>0.01</mn></mrow><annotation encoding="application/x-tex">33.02\pm0.01</annotation></semantics></math></td>
+</tr>
+<tr>
+<td>谱范数（Muon）</td>
+<td align="right">0.015</td>
+<td align="right"><math><semantics><mrow><mn>33.34</mn><mo>±</mo><mn>0.02</mn></mrow><annotation encoding="application/x-tex">33.34\pm0.02</annotation></semantics></math></td>
+</tr>
+</tbody></table></div>
+<p>困惑度从 Schatten-2 到 Schatten-3 降得最多，之后变化趋缓。谱范数版本的困惑度略高于 Schatten-8。论文用完整 SVD 计算中间几种几何的更新，谱范数更新可用 Newton–Schulz 近似。</p>
+<figure class="experiment-figure" data-figure="heavy-schatten-grid.png"><button type="button" class="figure-zoom" aria-label="放大实验图：Schatten 指数与学习率的完整扫描。格内是最终困惑度，越低越好。"><img src="{{ '/images/optimizer-notes/heavy-schatten-grid.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>Schatten 指数与学习率的完整扫描。格内是最终困惑度，越低越好。</figcaption></figure>
+<p>作者还在初始化和训练结束时，先用整份训练数据算梯度，再逐批量计算采样误差。对同一批误差，分别用核范数和 Frobenius 范数算 1.5 阶矩并取相应的根。两种噪声尺度的比值低于最坏界 <math><semantics><mrow><msqrt><mi>d</mi></msqrt></mrow><annotation encoding="application/x-tex">\sqrt d</annotation></semantics></math>，而且在初始化时总体比训练结束时小。分层噪声对照在初始化时测量。把噪声矩阵展成向量后，输入、输出嵌入的归一化 <math><semantics><mrow><msub><mi>ℓ</mi><mn>1</mn></msub><mo>/</mo><msub><mi>ℓ</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">\ell_1/\ell_2</annotation></semantics></math> 噪声比例比隐藏层矩阵低。</p>
+<figure class="experiment-figure" data-figure="heavy-noise-ratio.png"><button type="button" class="figure-zoom" aria-label="放大实验图：逐层梯度噪声比。左为初始化，右为训练结束，红色虚线是核范数与 Frobenius 范数比的最坏上界。"><img src="{{ '/images/optimizer-notes/heavy-noise-ratio.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>逐层梯度噪声比。左为初始化，右为训练结束，红色虚线是核范数与 Frobenius 范数比的最坏上界。</figcaption></figure>
+<figure class="experiment-figure" data-figure="heavy-layer-geometry.png"><button type="button" class="figure-zoom" aria-label="放大实验图：初始化时的分层噪声对照。左用矩阵范数，右将参数展平后用向量范数。"><img src="{{ '/images/optimizer-notes/heavy-layer-geometry.png' | relative_url }}" alt="" loading="lazy" decoding="async"><span aria-hidden="true">放大</span></button><figcaption>初始化时的分层噪声对照。左用矩阵范数，右将参数展平后用向量范数。</figcaption></figure>
+<h4>启发</h4>
+<ol>
+<li><strong>同一个精度数字，要对应同一种驻点标准。</strong> 对矩阵梯度，Frobenius 范数和核范数可以相差 <math><semantics><mrow><msqrt><mi>d</mi></msqrt></mrow><annotation encoding="application/x-tex">\sqrt d</annotation></semantics></math> 倍。把精度目标对齐后，才能看清优化器在查询次数上省了哪一项。</li>
+<li><strong>不同参数组可以用不同的更新几何。</strong> 论文测到隐藏层矩阵与嵌入的噪声比例不同，且同一层的比例也会随训练变化。要解释某一层为什么更适合 Muon，可以同时量它的噪声大小、奇异值分布和训练阶段。</li>
+<li><strong>比较训练配方时，把每步成本和所需步数一起算。</strong> 这组实验里的中间 Schatten 几何用完整 SVD 得到较低困惑度，谱范数几何用矩阵乘法近似更新。实际对比可以固定目标验证损失，分别报告用掉的 tokens 和训练时间。</li>
+</ol>
+</main>
+</div>
+<script>
+(() => {
+const lr = document.querySelector('#learning-rate');
+const slider = document.querySelector('#iteration');
+const chart = document.querySelector('#loss-chart');
+const methods = [
+ ['gd','#205e47',''],['hb','#9b421e','8 4'],['nag','#3c539b','3 4']
+];
+const count = 80;
+function trace(method, eta) {
+ let x=[4,1], prev=x, y=x, q=1;
+ const loss=([a,b])=>0.5*(a*a+100*b*b);
+ const values=[loss(x)];
+ for(let t=0;t<count;t++){
+  const at=method==='nag'?y:x;
+  let next=[at[0]*(1-eta),at[1]*(1-100*eta)];
+  if(method==='hb') next=next.map((v,j)=>v+0.8*(x[j]-prev[j]));
+  if(method==='nag'){
+   const qNext=(1+Math.sqrt(1+4*q*q))/2;
+   const beta=(q-1)/qNext;
+   y=next.map((v,j)=>v+beta*(v-x[j]));q=qNext;
+  }
+  prev=x;x=next;values.push(loss(x));
+ }
+ return values;
+}
+function draw() {
+ const eta=Number(lr.value), step=Number(slider.value);
+ const data=methods.map(([key])=>trace(key,eta));
+ const power = v=>Math.log10(Math.max(1e-14,v));
+ const all=data.flat().map(power);
+ const lo=Math.floor(Math.min(...all)), hi=Math.ceil(Math.max(...all));
+ const X=t=>72+t/count*526, Y=v=>229-(v-lo)/(hi-lo)*193;
+ const output=document.querySelector('#step-value');
+ output.textContent=step;
+ let graph='<text x="16" y="22">函数值 F(x)（对数）</text><text x="493" y="263">更新步数</text>';
+ for(let t=0;t<=count;t+=20){
+  graph+='<line x1="'+X(t)+'" x2="'+X(t)+'" y1="36" y2="229" stroke="#e2e9e1"/>';
+  graph+='<text x="'+X(t)+'" y="249" text-anchor="middle">'+t+'</text>';
+ }
+ const gap=Math.max(1,Math.ceil((hi-lo)/6));
+ for(let p=lo;p<=hi;p+=gap){
+  graph+='<line x1="72" x2="598" y1="'+Y(p)+'" y2="'+Y(p)+'" stroke="#dbe6db"/>';
+  graph+='<text x="63" y="'+(Y(p)+4)+'" text-anchor="end">10<tspan baseline-shift="super" font-size="10">'+p+'</tspan></text>';
+ }
+ graph+='<path d="M 72 36 V 229 H 598" fill="none" stroke="#78907e"/>';
+ graph+='<line x1="'+X(step)+'" x2="'+X(step)+'" y1="36" y2="229" stroke="#6d8473" stroke-dasharray="4 3"/>';
+ methods.forEach(([key,color,dash],i)=>{
+  const values=data[i], value=values[step];
+  const path=values.map((v,t)=>(t?'L':'M')+X(t).toFixed(1)+' '+Y(power(v)).toFixed(1)).join(' ');
+  graph+='<path d="'+path+'" fill="none" stroke="'+color+'" stroke-width="2.6" stroke-dasharray="'+dash+'"/>';
+  graph+='<circle cx="'+X(step)+'" cy="'+Y(power(value))+'" r="4.5" fill="'+color+'" stroke="white" stroke-width="1.4"/>';
+  document.querySelector('#'+key+'-loss').textContent=value.toPrecision(4);
+ });
+ chart.innerHTML=graph;
+}
+lr.addEventListener('change',draw);
+slider.addEventListener('input',draw);
+draw();
+
+})();
+(() => {
+const gammaInput = document.querySelector('#ema-gamma');
+const plot = document.querySelector('#ema-plot');
+const context = plot.getContext('2d');
+const totalSteps = 500;
+const directionChange = 250;
+
+function drawEma() {
+  const gamma = Number(gammaInput.value);
+  document.querySelector('#gamma-value').textContent = gamma.toFixed(3);
+  document.querySelector('#mean-age').textContent = (gamma / (1 - gamma)).toFixed(0);
+  document.querySelector('#oscillation').textContent =
+    (100 * (1 - gamma) / (1 + gamma)).toFixed(2) + '%';
+
+  const width = plot.clientWidth;
+  const height = plot.clientHeight;
+  const scale = window.devicePixelRatio || 1;
+  plot.width = Math.round(width * scale);
+  plot.height = Math.round(height * scale);
+  context.setTransform(scale, 0, 0, scale, 0, 0);
+
+  const left = 34;
+  const right = width - 18;
+  const top = 16;
+  const bottom = height - 37;
+  const x = step => left + step * (right - left) / totalSteps;
+  const y = value => top + (1.8 - value) * (bottom - top) / 3.6;
+
+  function drawLine(values, color, lineWidth, dashes = []) {
+    context.beginPath();
+    context.strokeStyle = color;
+    context.lineWidth = lineWidth;
+    context.setLineDash(dashes);
+    for (const [step, value] of values) {
+      context.lineTo(x(step), y(value));
+    }
+    context.stroke();
+    context.setLineDash([]);
+  }
+
+  context.font = '12px "Microsoft YaHei", system-ui, sans-serif';
+  context.fillStyle = '#4c5e55';
+  for (const value of [-1, 0, 1]) {
+    drawLine([[0, value], [totalSteps, value]], '#d6e2d7', 1);
+    context.fillText(String(value), 8, y(value) + 4);
+  }
+  drawLine([[directionChange, -1.8], [directionChange, 1.8]], '#aebeb2', 1, [3, 4]);
+  for (const step of [0, directionChange, totalSteps]) {
+    context.textAlign = 'center';
+    context.fillText(String(step), x(step), bottom + 18);
+  }
+  context.fillText('更新步数', (left + right) / 2, height - 5);
+
+  const displacements = [];
+  const ema = [[0, 0]];
+  let average = 0;
+  for (let step = 1; step <= totalSteps; step++) {
+    const trend = step < directionChange ? 1 : -1;
+    const displacement = trend + (step % 2 === 0 ? 0.55 : -0.55);
+    average = gamma * average + (1 - gamma) * displacement;
+    displacements.push([step, displacement]);
+    ema.push([step, average]);
+  }
+  drawLine(displacements, '#87928d55', 1);
+  drawLine([[0, 1], [directionChange, 1], [directionChange, -1], [totalSteps, -1]], '#9a4329', 1.5, [5, 4]);
+  drawLine(ema, '#21604d', 2.5);
+}
+
+gammaInput.addEventListener('input', drawEma);
+new ResizeObserver(drawEma).observe(plot);
+drawEma();
+
+})();
+function openCurrentPart() {
+  const matchingLink = [...document.querySelectorAll('.toc a')]
+    .find(link => link.hash === location.hash);
+  if (matchingLink) matchingLink.closest('details').open = true;
+}
+window.addEventListener('hashchange', openCurrentPart);
+openCurrentPart();
+</script>
+
+<dialog class="figure-dialog" aria-label="实验图">
+ <div class="dialog-head"><span></span><form method="dialog"><button>关闭</button></form></div>
+ <div class="dialog-chart" tabindex="0" aria-label="可横向滚动的实验图"><img alt=""></div>
+</dialog>
+<script>
+(() => {
+  const dialog = document.querySelector('.figure-dialog');
+  const enlarged = dialog.querySelector('img');
+  const caption = dialog.querySelector('.dialog-head span');
+  for (const button of document.querySelectorAll('.figure-zoom')) {
+    button.addEventListener('click', () => {
+      caption.textContent = button.nextElementSibling.textContent;
+      enlarged.src = button.querySelector('img').src;
+      enlarged.alt = caption.textContent;
+      dialog.showModal();
+    });
+  }
+  dialog.addEventListener('click', event => {
+    if (event.target === dialog) dialog.close();
+  });
+})();
+</script>
+</body>
+</html>
