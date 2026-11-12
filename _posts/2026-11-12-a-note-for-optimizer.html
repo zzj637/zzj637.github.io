@@ -64,6 +64,12 @@ related: false
 .site-links a{color:#e2ece2;text-decoration:none;font-size:.88rem}
 .site-links a:hover{text-decoration:underline;color:white}
 .hero .author-note{padding:.7rem .9rem;border-left:3px solid #abd0aa;background:#1e3b32;font-size:.9rem;line-height:1.8}
+.toc{text-transform:none;overscroll-behavior:contain;scrollbar-width:thin}
+.toc a{display:block;padding:.25rem .45rem;border-radius:4px;transition:background-color .15s,color .15s}
+.toc a[aria-current="location"]{background:var(--mint);color:var(--green);font-weight:750;box-shadow:inset 3px 0 var(--green)}
+.toc details.is-current>summary{color:var(--green)}
+.toc .toc-start{display:block;margin-left:.6rem}
+@media(prefers-reduced-motion:reduce){.toc a{transition:none}}
 @media print{.site-links{display:none}.hero .author-note{background:white;border-color:#333}}
 </style>
 </head>
@@ -87,9 +93,9 @@ related: false
  </div>
 </header>
 <div class="wrap columns">
- <nav class="toc" aria-label="文章目录"><b>文章目录</b><details open data-part="part-1"><summary>第一部分 · 经典梯度优化器</summary><a class="toc-start" href="#part-1">本篇开头</a><ul><li><a href="#gradient-descent">梯度下降与局部二次模型</a></li><li><a href="#sgd">SGD 与小批量</a></li><li><a href="#momentum">Momentum 与 Nesterov</a></li><li><a href="#adaptive">AdaGrad、RMSProp 与 Adadelta</a></li><li><a href="#adam">Adam 及其变体</a></li><li><a href="#lab">二维二次函数实验</a></li></ul></details>
-<details data-part="part-2"><summary>第二部分 · EMA 与 Nesterov 外推</summary><a class="toc-start" href="#part-2">本篇开头</a><ul><li><a href="#ema">什么是 EMA</a></li><li><a href="#lookahead-methods">Nesterov 与其他外推方法</a></li><li><a href="#update">EMA-Nesterov 的更新规则</a></li><li><a href="#convergence">凸优化收敛率</a></li><li><a href="#schedule">训练中的外推调度</a></li><li><a href="#experiments">语言模型实验</a></li><li><a href="#implementation">最小 Python 实现</a></li></ul></details>
-<details data-part="part-3"><summary>第三部分 · Muon 系列与重尾噪声</summary><a class="toc-start" href="#part-3">本篇开头</a><ul><li><a href="#muon">Muon 的来源、递推与工程实现</a></li><li><a href="#mona">MONA：正交化前的梯度差</a></li><li><a href="#muown">Muown：控制权重行范数</a></li><li><a href="#angular-muown">AngularMuown：显式调度转角</a></li><li><a href="#heavy-tailed-muon">重尾噪声下的 Muon</a></li></ul></details></nav>
+ <nav class="toc" aria-label="文章目录"><b>文章目录</b><details open data-part="part-1"><summary>第一部分 · 经典梯度优化器</summary><a class="toc-start" href="#part-1">本篇开头</a><ul><li><a href="#gradient-descent">梯度下降与局部二次模型</a></li><li><a href="#sgd">Sgd 与小批量</a></li><li><a href="#momentum">Momentum 与 Nesterov</a></li><li><a href="#adaptive">Adagrad、Rmsprop 与 Adadelta</a></li><li><a href="#adam">Adam 及其变体</a></li><li><a href="#lab">二维二次函数实验</a></li></ul></details>
+<details data-part="part-2"><summary>第二部分 · Ema 与 Nesterov 外推</summary><a class="toc-start" href="#part-2">本篇开头</a><ul><li><a href="#ema">什么是 Ema</a></li><li><a href="#lookahead-methods">Nesterov 与其他外推方法</a></li><li><a href="#update">Ema-Nesterov 的更新规则</a></li><li><a href="#convergence">凸优化收敛率</a></li><li><a href="#schedule">训练中的外推调度</a></li><li><a href="#experiments">语言模型实验</a></li><li><a href="#implementation">最小 Python 实现</a></li></ul></details>
+<details data-part="part-3"><summary>第三部分 · Muon 系列与重尾噪声</summary><a class="toc-start" href="#part-3">本篇开头</a><ul><li><a href="#muon">Muon 的来源、递推与工程实现</a></li><li><a href="#mona">Mona：正交化前的梯度差</a></li><li><a href="#muown">Muown：控制权重行范数</a></li><li><a href="#angular-muown">Angularmuown：显式调度转角</a></li><li><a href="#heavy-tailed-muon">重尾噪声下的 Muon</a></li></ul></details></nav>
  <main class="article"><p><span id="part-1"></span></p>
 <h2>第一部分 · 经典梯度优化器</h2>
 <p><strong>经典优化算法 · 原理与实现</strong></p>
@@ -979,13 +985,82 @@ new ResizeObserver(drawEma).observe(plot);
 drawEma();
 
 })();
-function openCurrentPart() {
-  const matchingLink = [...document.querySelectorAll('.toc a')]
-    .find(link => link.hash === location.hash);
-  if (matchingLink) matchingLink.closest('details').open = true;
-}
-window.addEventListener('hashchange', openCurrentPart);
-openCurrentPart();
+// Follow the reading position without changing the URL or browser history.
+(() => {
+  const toc = document.querySelector('.toc');
+  const groups = [...toc.querySelectorAll('details')];
+  const entries = [...toc.querySelectorAll('a[href^="#"]')].map(link => ({
+    link,
+    target: document.getElementById(link.hash.slice(1)),
+    group: link.closest('details')
+  })).filter(entry => entry.target);
+  if (!entries.length) return;
+
+  const desktop = window.matchMedia('(min-width:681px)');
+  let current = null;
+  let currentGroup = null;
+  let frame = null;
+
+  function activate(entry, reveal = false) {
+    if (entry === current && !reveal) return;
+    if (current) current.link.removeAttribute('aria-current');
+    entry.link.setAttribute('aria-current', 'location');
+    current = entry;
+
+    if (entry.group !== currentGroup || reveal) {
+      for (const group of groups) {
+        group.classList.toggle('is-current', group === entry.group);
+        // Keep the mobile page steady when its directory is above the article.
+        if (desktop.matches || reveal) group.open = group === entry.group;
+      }
+      currentGroup = entry.group;
+    }
+
+    if (desktop.matches) {
+      const panel = toc.getBoundingClientRect();
+      const item = entry.link.getBoundingClientRect();
+      if (item.top < panel.top + 8) toc.scrollTop += item.top - panel.top - 8;
+      else if (item.bottom > panel.bottom - 8) toc.scrollTop += item.bottom - panel.bottom + 8;
+    }
+  }
+
+  function update() {
+    frame = null;
+    let entry = entries[0];
+    for (const candidate of entries) {
+      if (candidate.target.getBoundingClientRect().top > 128) break;
+      entry = candidate;
+    }
+    if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2) {
+      entry = entries[entries.length - 1];
+    }
+    activate(entry);
+  }
+
+  function scheduleUpdate() {
+    if (frame === null) frame = window.requestAnimationFrame(update);
+  }
+
+  function followHash() {
+    const entry = entries.find(item => item.link.hash === window.location.hash);
+    if (entry) activate(entry, true);
+    scheduleUpdate();
+  }
+
+  for (const entry of entries) {
+    entry.link.addEventListener('click', () => activate(entry, true));
+  }
+  window.addEventListener('scroll', scheduleUpdate, { passive: true });
+  window.addEventListener('resize', () => {
+    if (current) activate(current, true);
+    scheduleUpdate();
+  });
+  window.addEventListener('hashchange', followHash);
+  window.addEventListener('load', scheduleUpdate);
+  window.addEventListener('pageshow', scheduleUpdate);
+  new ResizeObserver(scheduleUpdate).observe(document.querySelector('.article'));
+  followHash();
+})();
 </script>
 
 <dialog class="figure-dialog" aria-label="实验图">
