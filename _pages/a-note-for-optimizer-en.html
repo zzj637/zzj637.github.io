@@ -1,20 +1,9 @@
 ---
 layout: none
-title: "Notes on Optimizers (English)"
-date: 2026-11-12 00:00:00 +0800
+title: "A Note For Optimizer"
 permalink: /blog/a-note-for-optimizer/en/
 lang: en
-categories:
-  - blog
-tags:
-  - Optimization
-  - Deep Learning
-excerpt: "Research notes and personal reflections on classical gradient optimizers, EMA-Nesterov, Muon, and its variants."
-author_profile: false
-read_time: false
-comments: false
-share: false
-related: false
+sitemap: false
 ---
 <!doctype html>
 <html lang="en">
@@ -22,11 +11,11 @@ related: false
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Classical gradient optimizers, EMA-Nesterov, Muon, MONA, Muown, AngularMuown, and the theory of heavy-tailed noise.">
-<title>Notes on Optimizers - Zhu Zijian</title>
+<title>A Note For Optimizer - Zhu Zijian</title>
 <link rel="canonical" href="{{ page.url | absolute_url }}">
 <link rel="alternate" hreflang="zh-CN" href="{{ '/blog/a-note-for-optimizer/' | absolute_url }}">
 <link rel="alternate" hreflang="en" href="{{ '/blog/a-note-for-optimizer/en/' | absolute_url }}">
-<meta property="og:title" content="Notes on Optimizers">
+<meta property="og:title" content="A Note For Optimizer">
 <meta property="og:type" content="article">
 <script>
 (function () {
@@ -56,7 +45,7 @@ related: false
 
 <header class="post-head">
   <p class="kicker"><span>Research note</span><span class="dot">/</span><time datetime="2026-11-12">2026-11-12</time><span class="dot">/</span><span>Optimization</span></p>
-  <h1>Notes on Optimizers</h1>
+  <h1>A Note For Optimizer</h1>
   <p class="dek">I start with gradient descent, momentum, and adaptive step sizes, then look at how EMA smooths parameter displacements and how Muon and its variants update matrices.</p>
   <p class="byline">I based this article on my research project and presentation. I wrote it with help from Codex to record my research and reflections.</p>
 </header>
@@ -819,7 +808,7 @@ W_{t+1}=\operatorname{Diag}(g_{t+1})U_{t+1}.</annotation></semantics></math></di
 </main>
 </div>
 <footer class="post-foot">
-  <span>© 2026 Zhu Zijian · Notes on Optimizers</span>
+  <span>© 2026 Zhu Zijian · A Note For Optimizer</span>
   <span class="lang" role="group" aria-label="Language">
     <a href="{{ '/blog/a-note-for-optimizer/' | relative_url }}" hreflang="zh-CN" lang="zh-CN">中文</a>
     <a href="{{ '/blog/a-note-for-optimizer/en/' | relative_url }}" hreflang="en" aria-current="page">EN</a>
