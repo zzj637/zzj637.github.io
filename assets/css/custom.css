@@ -740,3 +740,118 @@ html[data-theme="dark"] .page--home .home-timeline {
     display: none;
   }
 }
+
+/* --------------------------------------------------------------------------
+   5. CV page: full-width PDF document
+   -------------------------------------------------------------------------- */
+#main > .page--cv {
+  width: 100%;
+  float: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.page--cv .page__content {
+  margin-top: 1.2rem;
+}
+
+.cv-doc {
+  border: 1px solid var(--home-border);
+  border-radius: 16px;
+  background: var(--home-surface);
+  box-shadow: var(--home-shadow);
+  overflow: hidden;
+}
+
+.cv-doc__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid var(--home-border);
+  font-size: 0.82rem;
+  color: var(--global-text-color-light);
+}
+
+.cv-doc__bar strong {
+  color: var(--global-text-color);
+  font-weight: 600;
+}
+
+.cv-doc__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.page--cv .cv-doc__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.38rem 0.9rem;
+  border: 1px solid var(--home-border);
+  border-radius: 999px;
+  background: var(--home-surface);
+  color: var(--global-text-color);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.page--cv .cv-doc__btn:hover,
+.page--cv .cv-doc__btn:focus-visible {
+  border-color: var(--global-base-color);
+  color: var(--global-base-color);
+  text-decoration: none;
+}
+
+.page--cv .cv-doc__btn--primary {
+  border-color: var(--global-base-color);
+  background: var(--global-base-color);
+  color: #fff;
+}
+
+.page--cv .cv-doc__btn--primary:hover,
+.page--cv .cv-doc__btn--primary:focus-visible {
+  border-color: var(--home-accent-strong);
+  background-color: var(--home-accent-strong);
+  color: #fff;
+}
+
+.cv-doc__frame {
+  display: block;
+  width: 100%;
+  height: min(84vh, 1150px);
+  border: 0;
+  background: var(--home-surface-soft);
+}
+
+.cv-doc__fallback {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: var(--global-text-color-light);
+}
+
+@media (max-width: 48em) {
+  .cv-doc__frame {
+    height: 68vh;
+  }
+}
+
+@media print {
+  .cv-doc__bar {
+    display: none;
+  }
+
+  .cv-doc {
+    border: 0;
+    box-shadow: none;
+  }
+
+  .cv-doc__frame {
+    height: auto;
+  }
+}

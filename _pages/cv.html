@@ -1,0 +1,24 @@
+---
+layout: single
+title: "CV"
+permalink: /cv/
+author_profile: false
+page_class: "page--cv"
+redirect_from:
+  - /resume
+  - /cv-json/
+  - /resume-json
+---
+
+<div class="cv-doc">
+  <div class="cv-doc__bar">
+    <span><strong>Curriculum Vitae</strong> · English · PDF</span>
+    <span class="cv-doc__actions">
+      <a class="cv-doc__btn cv-doc__btn--primary" href="{{ '/files/Zhu_Zijian_CV_EN.pdf' | relative_url }}" download>Download PDF</a>
+      <a class="cv-doc__btn" href="{{ '/files/Zhu_Zijian_CV_EN.pdf' | relative_url }}" target="_blank" rel="noopener">Open in a new tab</a>
+    </span>
+  </div>
+  <object class="cv-doc__frame" data="{{ '/files/Zhu_Zijian_CV_EN.pdf' | relative_url }}" type="application/pdf" aria-label="Curriculum Vitae — Zhu Zijian (PDF)">
+    <p class="cv-doc__fallback">Your browser cannot display PDFs inline. <a href="{{ '/files/Zhu_Zijian_CV_EN.pdf' | relative_url }}">Open the CV</a> instead.</p>
+  </object>
+</div>
