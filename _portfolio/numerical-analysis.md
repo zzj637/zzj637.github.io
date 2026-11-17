@@ -1,6 +1,6 @@
 ---
 title: "Numerical Analysis Coursework"
-excerpt: "南京大学数学学院数值分析课程的作业"
+excerpt: "Numerical Analysis coursework at the School of Mathematics, Nanjing University"
 collection: portfolio
 permalink: /portfolio/numerical-analysis/
 link: https://github.com/zzj637/numerical-analysis
