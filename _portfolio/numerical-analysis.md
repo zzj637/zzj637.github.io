@@ -3,6 +3,7 @@ title: "Numerical Analysis Coursework"
 excerpt: "Fourteen assignments and a final exam from the 2026 Numerical Analysis course — Python implementations with LaTeX write-ups, error analysis and figures."
 collection: portfolio
 permalink: /portfolio/numerical-analysis/
+share: false
 author_profile: true
 ---
 
