@@ -282,16 +282,6 @@ html[data-theme="dark"] .page__footer::before {
   letter-spacing: -0.02em;
 }
 
-.page--home .hero__cn {
-  display: inline-block;
-  margin-left: 0.45rem;
-  color: var(--global-text-color-light);
-  font-size: 0.55em;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  vertical-align: baseline;
-}
-
 .page--home .hero__lead {
   max-width: 54ch;
   margin: 0 0 1.25rem;
@@ -1050,10 +1040,6 @@ body.home .page--home .hero__title {
   background-clip: text;
   color: transparent;
   letter-spacing: -0.03em;
-}
-
-body.home .page--home .hero__cn {
-  color: var(--tech-muted);
 }
 
 body.home .page--home .hero__lead {

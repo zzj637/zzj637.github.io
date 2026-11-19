@@ -9,9 +9,9 @@
 # Basic Site Settings
 locale                   : "en-US"
 site_theme               : "default" # The available themes options are "default", "air", "sunrise", "mint", "dirt" and "contrast"
-title                    : "Zhu Zijian(朱子健)"
+title                    : "Zijian Zhu"
 title_separator          : "-"
-name                     : &name "Zhu Zijian"
+name                     : &name "Zijian Zhu"
 description              : &description "A student from Nanjing University"
 url                      : https://zzj637.github.io # The base hostname & protocol for your site e.g. "https://[your GitHub username].github.io",
                                                            # or if you already have some other page hosted on Github then use "https://[your GitHub username].github.io/[Your Repo Name]"
@@ -22,7 +22,7 @@ repository               : "zzj637/zzj637.github.io"
 #               If a field is blank the icon and link will not appear, otherwise it will be shown.
 #               Additional customization can be done by editing /_includes/author-profile.html
 author:
-  name             : "Zhu Zijian"
+  name             : "Zijian Zhu"
   bio              : "A student from Nanjing University"
   location         : "Nanjing, Jiangsu, China"
   employer         : "Nanjing University"
