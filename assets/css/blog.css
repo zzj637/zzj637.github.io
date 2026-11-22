@@ -1,6 +1,6 @@
 /* ==========================================================================
    blog.css — typography for the long-form notes (blog posts with layout: none)
-   Design: paper, ink, hairline rules. One accent colour. No cards, no shadows.
+   Design: paper, ink, hairline rules. One blue accent colour. No cards, no shadows.
    Light by default; dark follows <html data-theme="dark"> (set by inline script
    from localStorage('theme') / prefers-color-scheme, so it matches the site).
    ========================================================================== */
@@ -8,18 +8,18 @@
 :root {
   color-scheme: light;
 
-  --paper: #fcfbf7;
-  --paper-2: #f5f3ec;
-  --ink: #191e1b;
-  --ink-2: #49544e;
-  --ink-3: #7d8780;
-  --rule: #e4e0d5;
-  --rule-strong: #cdc7b8;
-  --accent: #1d5c46;
-  --accent-wash: #edf3ee;
-  --code-bg: #f1efe7;
-  --code-ink: #25322b;
-  --figure-bg: #fbfaf5;
+  --paper: #f7f9fc;
+  --paper-2: #eef3f8;
+  --ink: #172330;
+  --ink-2: #46586a;
+  --ink-3: #5f7286;
+  --rule: #dce4ec;
+  --rule-strong: #bfcddd;
+  --accent: #1f5f8f;
+  --accent-wash: #e8f0f8;
+  --code-bg: #edf3f8;
+  --code-ink: #203246;
+  --figure-bg: #fbfdff;
 
   --serif: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
   --serif-zh: "Palatino Linotype", Palatino, Georgia, "Microsoft YaHei", "PingFang SC", sans-serif;
@@ -31,17 +31,17 @@
 html[data-theme="dark"] {
   color-scheme: dark;
 
-  --paper: #141816;
-  --paper-2: #1a1f1c;
-  --ink: #e7e4da;
-  --ink-2: #b2b9b2;
-  --ink-3: #8a938c;
-  --rule: #2b322d;
-  --rule-strong: #3d453f;
-  --accent: #8fc3a8;
-  --accent-wash: #1c2a23;
-  --code-bg: #1b211d;
-  --code-ink: #dee4dc;
+  --paper: #0d1722;
+  --paper-2: #142230;
+  --ink: #e8f0f7;
+  --ink-2: #b6c8d8;
+  --ink-3: #8fa4b7;
+  --rule: #26394a;
+  --rule-strong: #3a5268;
+  --accent: #8ec8f0;
+  --accent-wash: #172b3e;
+  --code-bg: #132433;
+  --code-ink: #dce9f4;
 }
 
 *,
@@ -587,7 +587,7 @@ code {
 }
 
 .lab-legend .gd {
-  color: #1f6a50;
+  color: #1f6fa8;
 }
 
 .lab-legend .hb {
@@ -684,7 +684,7 @@ code {
 }
 
 .figure-dialog::backdrop {
-  background: rgba(10, 20, 16, 0.72);
+  background: rgba(7, 17, 27, 0.72);
 }
 
 .figure-dialog .dialog-head {
@@ -835,7 +835,7 @@ code {
     --ink-3: #444;
     --rule: #bbb;
     --rule-strong: #666;
-    --accent: #12402f;
+    --accent: #123f63;
   }
 
   body {

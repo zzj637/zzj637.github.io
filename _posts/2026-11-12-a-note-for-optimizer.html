@@ -832,7 +832,7 @@ const lr = document.querySelector('#learning-rate');
 const slider = document.querySelector('#iteration');
 const chart = document.querySelector('#loss-chart');
 const methods = [
- ['gd','#205e47',''],['hb','#9b421e','8 4'],['nag','#3c539b','3 4']
+ ['gd','#1f6fa8',''],['hb','#9b421e','8 4'],['nag','#3c539b','3 4']
 ];
 const count = 80;
 function trace(method, eta) {
@@ -863,16 +863,16 @@ function draw() {
  output.textContent=step;
  let graph='<text x="16" y="22">函数值 F(x)（对数）</text><text x="493" y="263">更新步数</text>';
  for(let t=0;t<=count;t+=20){
-  graph+='<line x1="'+X(t)+'" x2="'+X(t)+'" y1="36" y2="229" stroke="#e2e9e1"/>';
+  graph+='<line x1="'+X(t)+'" x2="'+X(t)+'" y1="36" y2="229" stroke="#e0e9f2"/>';
   graph+='<text x="'+X(t)+'" y="249" text-anchor="middle">'+t+'</text>';
  }
  const gap=Math.max(1,Math.ceil((hi-lo)/6));
  for(let p=lo;p<=hi;p+=gap){
-  graph+='<line x1="72" x2="598" y1="'+Y(p)+'" y2="'+Y(p)+'" stroke="#dbe6db"/>';
+  graph+='<line x1="72" x2="598" y1="'+Y(p)+'" y2="'+Y(p)+'" stroke="#d9e4ee"/>';
   graph+='<text x="63" y="'+(Y(p)+4)+'" text-anchor="end">10<tspan baseline-shift="super" font-size="10">'+p+'</tspan></text>';
  }
- graph+='<path d="M 72 36 V 229 H 598" fill="none" stroke="#78907e"/>';
- graph+='<line x1="'+X(step)+'" x2="'+X(step)+'" y1="36" y2="229" stroke="#6d8473" stroke-dasharray="4 3"/>';
+ graph+='<path d="M 72 36 V 229 H 598" fill="none" stroke="#6b8297"/>';
+ graph+='<line x1="'+X(step)+'" x2="'+X(step)+'" y1="36" y2="229" stroke="#607b90" stroke-dasharray="4 3"/>';
  methods.forEach(([key,color,dash],i)=>{
   const values=data[i], value=values[step];
   const path=values.map((v,t)=>(t?'L':'M')+X(t).toFixed(1)+' '+Y(power(v)).toFixed(1)).join(' ');
@@ -928,12 +928,12 @@ function drawEma() {
   }
 
   context.font = '12px "Microsoft YaHei", system-ui, sans-serif';
-  context.fillStyle = '#4c5e55';
+  context.fillStyle = '#46586a';
   for (const value of [-1, 0, 1]) {
-    drawLine([[0, value], [totalSteps, value]], '#d6e2d7', 1);
+    drawLine([[0, value], [totalSteps, value]], '#d6e2ed', 1);
     context.fillText(String(value), 8, y(value) + 4);
   }
-  drawLine([[directionChange, -1.8], [directionChange, 1.8]], '#aebeb2', 1, [3, 4]);
+  drawLine([[directionChange, -1.8], [directionChange, 1.8]], '#a7b7c5', 1, [3, 4]);
   for (const step of [0, directionChange, totalSteps]) {
     context.textAlign = 'center';
     context.fillText(String(step), x(step), bottom + 18);
@@ -950,9 +950,9 @@ function drawEma() {
     displacements.push([step, displacement]);
     ema.push([step, average]);
   }
-  drawLine(displacements, '#87928d55', 1);
+  drawLine(displacements, '#7a8fa355', 1);
   drawLine([[0, 1], [directionChange, 1], [directionChange, -1], [totalSteps, -1]], '#9a4329', 1.5, [5, 4]);
-  drawLine(ema, '#21604d', 2.5);
+  drawLine(ema, '#1f5f8f', 2.5);
 }
 
 gammaInput.addEventListener('input', drawEma);
