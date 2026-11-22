@@ -11,40 +11,40 @@
    1. Design tokens
    -------------------------------------------------------------------------- */
 :root {
-  --home-accent-strong: #266676;
-  --home-border: rgba(47, 127, 147, 0.16);
+  --home-accent-strong: #1b5a86;
+  --home-border: rgba(31, 95, 143, 0.16);
   --home-surface: #ffffff;
-  --home-surface-soft: #f5fafb;
-  --home-icon-bg: rgba(47, 127, 147, 0.10);
-  --home-chip-bg: rgba(47, 127, 147, 0.07);
-  --home-shadow: 0 18px 40px -30px rgba(16, 54, 66, 0.45);
-  --home-shadow-hover: 0 20px 40px -24px rgba(16, 54, 66, 0.42);
-  --home-hero-from: #eaf6f8;
-  --home-hero-to: #fdfefe;
-  --home-hero-glow: rgba(47, 127, 147, 0.20);
+  --home-surface-soft: #f4f8fc;
+  --home-icon-bg: rgba(31, 95, 143, 0.10);
+  --home-chip-bg: rgba(31, 95, 143, 0.07);
+  --home-shadow: 0 18px 40px -30px rgba(10, 30, 48, 0.45);
+  --home-shadow-hover: 0 20px 40px -24px rgba(10, 30, 48, 0.42);
+  --home-hero-from: #e8f1fa;
+  --home-hero-to: #fbfdff;
+  --home-hero-glow: rgba(31, 95, 143, 0.20);
 
-  --site-footer-bg: #f5f7f8;
+  --site-footer-bg: #eef3f8;
   --site-footer-pill-bg: #ffffff;
-  --site-footer-border: rgba(47, 127, 147, 0.18);
-  --site-footer-text: #5c6b72;
+  --site-footer-border: rgba(31, 95, 143, 0.18);
+  --site-footer-text: #5b6e82;
 }
 
 html[data-theme="dark"] {
-  --home-border: rgba(255, 255, 255, 0.14);
-  --home-surface: #4f4f4f;
-  --home-surface-soft: #4a4a4a;
-  --home-icon-bg: rgba(14, 161, 197, 0.20);
+  --home-border: rgba(170, 205, 232, 0.16);
+  --home-surface: #142433;
+  --home-surface-soft: #102131;
+  --home-icon-bg: rgba(142, 200, 240, 0.20);
   --home-chip-bg: rgba(255, 255, 255, 0.08);
   --home-shadow: 0 18px 40px -30px rgba(0, 0, 0, 0.65);
   --home-shadow-hover: 0 20px 40px -22px rgba(0, 0, 0, 0.60);
-  --home-hero-from: rgba(14, 161, 197, 0.22);
-  --home-hero-to: rgba(14, 161, 197, 0.04);
-  --home-hero-glow: rgba(14, 161, 197, 0.30);
+  --home-hero-from: rgba(142, 200, 240, 0.22);
+  --home-hero-to: rgba(142, 200, 240, 0.04);
+  --home-hero-glow: rgba(142, 200, 240, 0.30);
 
-  --site-footer-bg: #3f3f3f;
-  --site-footer-pill-bg: #4f4f4f;
-  --site-footer-border: rgba(255, 255, 255, 0.16);
-  --site-footer-text: #d8dde0;
+  --site-footer-bg: #0b1621;
+  --site-footer-pill-bg: #142433;
+  --site-footer-border: rgba(163, 195, 220, 0.18);
+  --site-footer-text: #c8d8e6;
 }
 
 /* --------------------------------------------------------------------------
@@ -90,12 +90,12 @@ body {
   left: 0;
   right: 0;
   height: 2px;
-  background-image: linear-gradient(90deg, transparent, rgba(47, 127, 147, 0.55), transparent);
+  background-image: linear-gradient(90deg, transparent, rgba(31, 95, 143, 0.55), transparent);
   pointer-events: none;
 }
 
 html[data-theme="dark"] .page__footer::before {
-  background-image: linear-gradient(90deg, transparent, rgba(14, 161, 197, 0.65), transparent);
+  background-image: linear-gradient(90deg, transparent, rgba(142, 200, 240, 0.65), transparent);
 }
 
 .page__footer footer {
@@ -163,7 +163,7 @@ html[data-theme="dark"] .page__footer::before {
   border-color: var(--global-base-color);
   text-decoration: none;
   transform: translateY(-1px);
-  box-shadow: 0 8px 18px -10px rgba(47, 127, 147, 0.75);
+  box-shadow: 0 8px 18px -10px rgba(31, 95, 143, 0.75);
 }
 
 .page__footer .page__footer-copyright {
@@ -244,8 +244,8 @@ html[data-theme="dark"] .page__footer::before {
   width: 58px;
   height: 58px;
   border-radius: 18px;
-  background-image: linear-gradient(145deg, #2f7f93 0%, #56b3cf 100%);
-  box-shadow: 0 12px 24px -12px rgba(47, 127, 147, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  background-image: linear-gradient(145deg, #1f5f8f 0%, #5ca5d4 100%);
+  box-shadow: 0 12px 24px -12px rgba(31, 95, 143, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.4);
   color: #fff;
   font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
   font-size: 1.9rem;
@@ -342,7 +342,7 @@ html[data-theme="dark"] .page__footer::before {
   color: var(--global-base-color);
   text-decoration: none;
   transform: translateY(-1px);
-  box-shadow: 0 10px 20px -14px rgba(47, 127, 147, 0.7);
+  box-shadow: 0 10px 20px -14px rgba(31, 95, 143, 0.7);
 }
 
 .page--home .home-btn--primary {
@@ -488,18 +488,18 @@ html[data-theme="dark"] .page__footer::before {
   border: 1px solid var(--home-border);
   border-radius: 16px;
   background-color: var(--home-surface);
-  box-shadow: 0 1px 2px rgba(16, 54, 66, 0.05);
+  box-shadow: 0 1px 2px rgba(10, 30, 48, 0.05);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .page--home .home-card:hover {
-  border-color: rgba(47, 127, 147, 0.38);
+  border-color: rgba(31, 95, 143, 0.38);
   transform: translateY(-3px);
   box-shadow: var(--home-shadow-hover);
 }
 
 html[data-theme="dark"] .page--home .home-card:hover {
-  border-color: rgba(14, 161, 197, 0.5);
+  border-color: rgba(142, 200, 240, 0.5);
 }
 
 .page--home .home-card__icon {
@@ -534,7 +534,7 @@ html[data-theme="dark"] .page--home .home-card:hover {
   position: relative;
   margin: 0.4rem 0 0;
   padding: 0 0 0 1.05rem;
-  border-left: 2px solid rgba(47, 127, 147, 0.28);
+  border-left: 2px solid rgba(31, 95, 143, 0.28);
 }
 
 .page--home .home-timeline__item {
@@ -629,7 +629,7 @@ html[data-theme="dark"] .page--home .home-timeline {
 
 .page--home .home-feature:hover,
 .page--home .home-feature:focus-visible {
-  border-color: rgba(47, 127, 147, 0.4);
+  border-color: rgba(31, 95, 143, 0.4);
   color: var(--global-text-color);
   text-decoration: none;
   transform: translateY(-2px);
