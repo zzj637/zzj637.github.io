@@ -612,6 +612,13 @@ html[data-theme="dark"] .page--home .home-timeline {
   color: var(--global-base-color);
 }
 
+.page--home .home-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+}
+
 /* --- Feature card (latest writing) --------------------------------------- */
 .page--home .home-feature {
   display: flex;
@@ -746,11 +753,16 @@ html[data-theme="dark"] .page--home .home-timeline {
 }
 
 .cv-doc {
+  scroll-margin-top: 5rem;
   border: 1px solid var(--home-border);
   border-radius: 16px;
   background: var(--home-surface);
   box-shadow: var(--home-shadow);
   overflow: hidden;
+}
+
+.cv-doc + .cv-doc {
+  margin-top: 1.5rem;
 }
 
 .cv-doc__bar {
