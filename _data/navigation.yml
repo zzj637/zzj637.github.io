@@ -24,7 +24,7 @@ main:
     url: /year-archive/
     
   - title: "CV & Transcript"
-    url: /cv/
+    url: /cv/transcript/
     
   # - title: "CV"
   #   url: /cv-json/
