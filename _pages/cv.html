@@ -8,30 +8,36 @@ redirect_from:
   - /resume
   - /cv-json/
   - /resume-json
+  - /transcript/
+  - /cv/transcript/
 ---
 
+<p class="cv-doc__intro">Download or open my curriculum vitae and academic transcript in PDF format.</p>
+
 <div class="cv-doc" id="cv">
-  <div class="cv-doc__bar">
-    <span><strong>Curriculum Vitae</strong> · English · PDF · 1 page</span>
-    <span class="cv-doc__actions">
-      <a class="cv-doc__btn cv-doc__btn--primary" href="{{ '/files/Zhu_Zijian_CV_EN.pdf' | relative_url }}" download>Download PDF</a>
-      <a class="cv-doc__btn" href="{{ '/files/Zhu_Zijian_CV_EN.pdf' | relative_url }}" target="_blank" rel="noopener">Open in a new tab</a>
-    </span>
+  <div class="cv-doc__icon"><i class="fas fa-file-lines" aria-hidden="true"></i></div>
+  <div class="cv-doc__info">
+    <h2 class="cv-doc__title">Curriculum Vitae</h2>
+    <p class="cv-doc__meta">English · PDF · 1 page</p>
+    <p class="cv-doc__desc">Education, research interests and skills.</p>
   </div>
-  <object class="cv-doc__frame" data="{{ '/files/Zhu_Zijian_CV_EN.pdf' | relative_url }}" type="application/pdf" aria-label="Curriculum Vitae — Zijian Zhu (PDF)">
-    <p class="cv-doc__fallback">Your browser cannot display PDFs inline. <a href="{{ '/files/Zhu_Zijian_CV_EN.pdf' | relative_url }}">Open the CV</a> instead.</p>
-  </object>
+  <div class="cv-doc__actions">
+    <a class="cv-doc__btn cv-doc__btn--primary" href="{{ '/files/Zhu_Zijian_CV_EN.pdf' | relative_url }}" download><i class="fas fa-download" aria-hidden="true"></i>Download PDF</a>
+    <a class="cv-doc__btn" href="{{ '/files/Zhu_Zijian_CV_EN.pdf' | relative_url }}" target="_blank" rel="noopener"><i class="fas fa-file-pdf" aria-hidden="true"></i>Open PDF</a>
+  </div>
 </div>
 
 <div class="cv-doc" id="transcript">
-  <div class="cv-doc__bar">
-    <span><strong>Academic Transcript</strong> · English · PDF · 2 pages</span>
-    <span class="cv-doc__actions">
-      <a class="cv-doc__btn cv-doc__btn--primary" href="{{ '/files/Zhu_Zijian_Transcript_EN.pdf' | relative_url }}" download>Download PDF</a>
-      <a class="cv-doc__btn" href="{{ '/files/Zhu_Zijian_Transcript_EN.pdf' | relative_url }}" target="_blank" rel="noopener">Open in a new tab</a>
-    </span>
+  <div class="cv-doc__icon"><i class="fas fa-scroll" aria-hidden="true"></i></div>
+  <div class="cv-doc__info">
+    <h2 class="cv-doc__title">Academic Transcript</h2>
+    <p class="cv-doc__meta">English · PDF · 2 pages</p>
+    <p class="cv-doc__desc">Official undergraduate transcript from Nanjing University.</p>
   </div>
-  <object class="cv-doc__frame" data="{{ '/files/Zhu_Zijian_Transcript_EN.pdf' | relative_url }}" type="application/pdf" aria-label="Academic Transcript — Zijian Zhu (PDF)">
-    <p class="cv-doc__fallback">Your browser cannot display PDFs inline. <a href="{{ '/files/Zhu_Zijian_Transcript_EN.pdf' | relative_url }}">Open the transcript</a> instead.</p>
-  </object>
+  <div class="cv-doc__actions">
+    <a class="cv-doc__btn cv-doc__btn--primary" href="{{ '/files/Zhu_Zijian_Transcript_EN.pdf' | relative_url }}" download><i class="fas fa-download" aria-hidden="true"></i>Download PDF</a>
+    <a class="cv-doc__btn" href="{{ '/files/Zhu_Zijian_Transcript_EN.pdf' | relative_url }}" target="_blank" rel="noopener"><i class="fas fa-file-pdf" aria-hidden="true"></i>Open PDF</a>
+  </div>
 </div>
+
+<p class="cv-doc__note">If a PDF opens blank or does not open in your browser, use “Download PDF” and open the saved file on your device.</p>

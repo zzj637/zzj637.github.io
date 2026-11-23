@@ -739,7 +739,7 @@ html[data-theme="dark"] .page--home .home-timeline {
 }
 
 /* --------------------------------------------------------------------------
-   5. CV page: full-width PDF document
+   5. CV page: document cards
    -------------------------------------------------------------------------- */
 #main > .page--cv {
   width: 100%;
@@ -752,53 +752,82 @@ html[data-theme="dark"] .page--home .home-timeline {
   margin-top: 1.2rem;
 }
 
+.cv-doc__intro {
+  margin: 0 0 1.25rem;
+  color: var(--global-text-color-light);
+  font-size: 0.9rem;
+}
+
 .cv-doc {
-  scroll-margin-top: 5rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem 1.25rem;
+  scroll-margin-top: 6rem;
+  padding: 1.2rem 1.3rem;
   border: 1px solid var(--home-border);
   border-radius: 16px;
   background: var(--home-surface);
   box-shadow: var(--home-shadow);
-  overflow: hidden;
 }
 
 .cv-doc + .cv-doc {
-  margin-top: 1.5rem;
+  margin-top: 1rem;
 }
 
-.cv-doc__bar {
+.cv-doc__icon {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem 1rem;
-  padding: 0.85rem 1.1rem;
-  border-bottom: 1px solid var(--home-border);
-  font-size: 0.82rem;
-  color: var(--global-text-color-light);
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--home-icon-bg);
+  color: var(--global-base-color);
+  font-size: 1.05rem;
 }
 
-.cv-doc__bar strong {
+.cv-doc__title {
+  margin: 0 0 0.2rem;
   color: var(--global-text-color);
-  font-weight: 600;
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.cv-doc__meta {
+  margin: 0 0 0.3rem;
+  color: var(--global-text-color-light);
+  font-size: 0.78rem;
+  letter-spacing: 0.01em;
+}
+
+.cv-doc__desc {
+  margin: 0;
+  color: var(--global-text-color);
+  font-size: 0.88rem;
+  line-height: 1.55;
 }
 
 .cv-doc__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  justify-content: flex-end;
 }
 
 .page--cv .cv-doc__btn {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.38rem 0.9rem;
+  padding: 0.45rem 0.95rem;
   border: 1px solid var(--home-border);
   border-radius: 999px;
   background: var(--home-surface);
   color: var(--global-text-color);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 600;
+  white-space: nowrap;
   text-decoration: none;
   transition: color 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
 }
@@ -823,38 +852,35 @@ html[data-theme="dark"] .page--home .home-timeline {
   color: #fff;
 }
 
-.cv-doc__frame {
-  display: block;
-  width: 100%;
-  height: min(84vh, 1150px);
-  border: 0;
-  background: var(--home-surface-soft);
-}
-
-.cv-doc__fallback {
-  padding: 2.5rem 1.5rem;
-  text-align: center;
+.cv-doc__note {
+  margin: 1.4rem 0 0;
   color: var(--global-text-color-light);
+  font-size: 0.8rem;
+  line-height: 1.6;
 }
 
 @media (max-width: 48em) {
-  .cv-doc__frame {
-    height: 68vh;
+  .cv-doc {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .cv-doc__actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
   }
 }
 
 @media print {
-  .cv-doc__bar {
-    display: none;
-  }
-
   .cv-doc {
     border: 0;
     box-shadow: none;
+    padding: 0.6rem 0;
   }
 
-  .cv-doc__frame {
-    height: auto;
+  .cv-doc__actions,
+  .cv-doc__note {
+    display: none;
   }
 }
 
