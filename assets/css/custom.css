@@ -787,7 +787,7 @@ html[data-theme="dark"] .page--home .home-timeline {
   font-size: 1.05rem;
 }
 
-.cv-doc__title {
+.page--cv .cv-doc__title {
   margin: 0 0 0.2rem;
   padding-bottom: 0;
   border-bottom: 0;
