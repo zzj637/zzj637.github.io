@@ -1279,3 +1279,202 @@ body.home .page--home .home-cta__text {
     animation: none;
   }
 }
+
+/* --------------------------------------------------------------------------
+   5. Password protected post
+   The body is encrypted; this styles the unlock card and the Chinese text
+   revealed after a successful decryption.
+   -------------------------------------------------------------------------- */
+.page--locked .page__content {
+  margin-top: 1.1rem;
+}
+
+.locked-post__card {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 2.1rem 1.7rem 1.9rem;
+  border: 1px solid var(--home-border);
+  border-radius: 18px;
+  background: var(--home-surface);
+  box-shadow: var(--home-shadow);
+  text-align: center;
+}
+
+.locked-post__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 0.9rem;
+  border-radius: 50%;
+  background: var(--home-icon-bg);
+  color: var(--global-base-color);
+  font-size: 1.05rem;
+}
+
+.page--locked .page__content .locked-post__title {
+  margin: 0 0 0.55rem;
+  padding-bottom: 0;
+  border-bottom: 0;
+  color: var(--global-text-color);
+  font-size: 1.08rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.locked-post__hint {
+  max-width: 26rem;
+  margin: 0 auto;
+  color: var(--global-text-color-light);
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.locked-post__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: center;
+  max-width: 22rem;
+  margin: 1.35rem auto 0;
+}
+
+.locked-post__input {
+  flex: 1 1 11rem;
+  min-width: 0;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--home-border);
+  border-radius: 10px;
+  background: var(--global-bg-color);
+  color: var(--global-text-color);
+  font-size: 0.92rem;
+  letter-spacing: 0.12em;
+  text-align: center;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.locked-post__input:focus {
+  outline: none;
+  border-color: var(--global-base-color);
+  box-shadow: 0 0 0 3px rgba(31, 95, 143, 0.16);
+}
+
+.locked-post__input:disabled {
+  opacity: 0.6;
+}
+
+.locked-post__btn {
+  flex: 0 0 auto;
+  padding: 0.55rem 1.35rem;
+  border: 1px solid var(--global-base-color);
+  border-radius: 10px;
+  background: var(--global-base-color);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.locked-post__btn:hover:not(:disabled),
+.locked-post__btn:focus-visible:not(:disabled) {
+  border-color: var(--home-accent-strong);
+  background: var(--home-accent-strong);
+}
+
+.locked-post__btn:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.locked-post__error {
+  margin: 0.85rem 0 0;
+  color: #b3261e;
+  font-size: 0.82rem;
+}
+
+html[data-theme="dark"] .locked-post__error {
+  color: #f2b8b5;
+}
+
+.locked-post.is-shaking .locked-post__card {
+  animation: locked-post-shake 0.4s ease;
+}
+
+@keyframes locked-post-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+.locked-post__content {
+  animation: locked-post-fade 0.35s ease;
+}
+
+/* the content is focused programmatically for screen readers only,
+   never reachable with Tab, so no focus ring is needed */
+.locked-post__content:focus {
+  outline: none;
+}
+
+@keyframes locked-post-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Chinese body text: roomier leading, justified lines */
+.post-body--zh p {
+  margin: 0 0 1.35rem;
+  font-size: 1.02rem;
+  line-height: 1.95;
+  letter-spacing: 0.012em;
+  text-align: justify;
+  text-justify: inter-ideograph;
+}
+
+.post-body--zh p:last-child {
+  margin-bottom: 0;
+}
+
+.post-body--zh .post-body__sign {
+  color: var(--global-text-color-light);
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .locked-post.is-shaking .locked-post__card,
+  .locked-post__content {
+    animation: none;
+  }
+}
+
+@media (max-width: 30em) {
+  .locked-post__card {
+    padding: 1.6rem 1.1rem;
+  }
+
+  .locked-post__btn {
+    width: 100%;
+  }
+}
