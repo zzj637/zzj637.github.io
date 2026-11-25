@@ -56,6 +56,27 @@ redirect_from:
   <h1>A Note For Optimizer</h1>
   <p class="dek">I start with gradient descent, momentum, and adaptive step sizes, then look at how EMA smooths parameter displacements and how Muon and its variants update matrices.</p>
   <p class="byline">I based this article on my research project and presentation. I wrote it with help from Codex to record my research and reflections.</p>
+  <div class="slides" aria-labelledby="slides-label">
+    <p class="slides__label" id="slides-label">Slides</p>
+    <ul class="slides__list">
+      <li class="slides__item">
+        <span class="slides__title">From Gradient Descent to Muown</span>
+        <span class="slides__meta">37 slides · 0.5 MB</span>
+        <span class="slides__actions">
+          <a class="slides__link" href="{{ '/files/gradient-descent-to-muown-slides.pdf' | relative_url }}" target="_blank" rel="noopener">Read</a>
+          <a class="slides__link slides__link--ghost" href="{{ '/files/gradient-descent-to-muown-slides.pdf' | relative_url }}" download>Download</a>
+        </span>
+      </li>
+      <li class="slides__item">
+        <span class="slides__title">Nesterov Acceleration in Deep Learning</span>
+        <span class="slides__meta">Lookahead and noise reduction · 35 slides · 1.8 MB</span>
+        <span class="slides__actions">
+          <a class="slides__link" href="{{ '/files/nesterov-acceleration-slides.pdf' | relative_url }}" target="_blank" rel="noopener">Read</a>
+          <a class="slides__link slides__link--ghost" href="{{ '/files/nesterov-acceleration-slides.pdf' | relative_url }}" download>Download</a>
+        </span>
+      </li>
+    </ul>
+  </div>
 </header>
 <div class="wrap columns">
  <nav class="toc" aria-label="Table of contents"><b>Table of contents</b><details open data-part="part-1"><summary>Part I · Classical gradient optimizers</summary><a class="toc-start" href="#part-1">Start of this part</a><ul><li><a href="#gradient-descent">Gradient descent and local quadratic models</a></li><li><a href="#sgd">SGD and minibatches</a></li><li><a href="#momentum">Momentum and Nesterov acceleration</a></li><li><a href="#adaptive">AdaGrad, RMSProp, and Adadelta</a></li><li><a href="#adam">Adam and its variants</a></li><li><a href="#lab">A two-dimensional quadratic experiment</a></li></ul></details>
