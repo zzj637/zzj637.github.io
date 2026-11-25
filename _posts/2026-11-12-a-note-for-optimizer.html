@@ -834,6 +834,30 @@ W_{t+1}=\operatorname{Diag}(g_{t+1})U_{t+1}.</annotation></semantics></math></di
 <li><strong>Different parameter groups can use different update geometries.</strong> The paper finds different noise ratios for hidden-layer matrices and embeddings. The ratio within a layer also changes over training. To investigate why Muon may work better for a particular layer, measure its noise scale and singular-value distribution at different training stages.</li>
 <li><strong>Compare both the cost per step and the number of steps needed.</strong> In these experiments, intermediate Schatten geometries use a full SVD and attain lower perplexity, while spectral-norm updates are approximated with matrix multiplications. A practical comparison can fix a target validation loss and report both tokens consumed and training time.</li>
 </ol>
+<nav class="post-adjacent" aria-label="Post navigation">
+  {% if page.previous %}
+  <a class="post-adjacent__item" href="{{ page.previous.url | relative_url }}" rel="prev">
+    <span class="post-adjacent__label">Previous</span>
+    <span class="post-adjacent__title">{{ page.previous.title }}</span>
+  </a>
+  {% else %}
+  <span class="post-adjacent__item is-empty">
+    <span class="post-adjacent__label">Previous</span>
+    <span class="post-adjacent__title">No older post</span>
+  </span>
+  {% endif %}
+  {% if page.next %}
+  <a class="post-adjacent__item post-adjacent__item--next" href="{{ page.next.url | relative_url }}" rel="next">
+    <span class="post-adjacent__label">Next</span>
+    <span class="post-adjacent__title">{{ page.next.title }}</span>
+  </a>
+  {% else %}
+  <span class="post-adjacent__item post-adjacent__item--next is-empty">
+    <span class="post-adjacent__label">Next</span>
+    <span class="post-adjacent__title">No newer post</span>
+  </span>
+  {% endif %}
+</nav>
 </main>
 </div>
 <footer class="post-foot">
