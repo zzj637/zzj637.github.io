@@ -775,6 +775,14 @@ code {
   padding: 0.7rem 0;
   border-bottom: 1px solid var(--rule);
 }
+.res__info {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.75rem;
+  min-width: 0;
+}
 
 .res__title {
   color: var(--ink);
@@ -789,6 +797,7 @@ code {
 
 .res__actions {
   display: flex;
+  flex: 0 0 auto;
   gap: 0.9rem;
   margin-left: auto;
 }
