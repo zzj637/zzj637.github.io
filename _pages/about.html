@@ -2,119 +2,71 @@
 permalink: /
 title: "Zijian Zhu"
 author_profile: false
-home: true
+page_class: "page--jb"
 redirect_from:
   - /about/
   - /about.html
 ---
 
-<!-- Hero -->
-<section class="hero" itemscope itemtype="http://schema.org/Person">
-  <div class="hero__monogram" aria-hidden="true">Z</div>
-  <div class="hero__content">
-    <p class="hero__eyebrow">Hello, I’m</p>
-    <h1 class="hero__title" itemprop="name">Zijian Zhu</h1>
-    <ul class="hero__facts">
-      <li><i class="fas fa-fw fa-location-dot" aria-hidden="true"></i>Nanjing, Jiangsu, China</li>
-      <li><i class="fas fa-fw fa-building-columns" aria-hidden="true"></i>Nanjing University</li>
-      <li><i class="fas fa-fw fa-graduation-cap" aria-hidden="true"></i>B.S. in Statistics · 2024 – present</li>
-    </ul>
-    <div class="hero__actions">
-      <a class="home-btn home-btn--primary" href="{{ '/cv&transcript/' | relative_url }}"><i class="fas fa-file-lines" aria-hidden="true"></i>CV &amp; Transcript</a>
-      <a class="home-btn" href="https://github.com/zzj637" target="_blank" rel="noopener"><i class="fab fa-github" aria-hidden="true"></i>GitHub</a>
-      <a class="home-btn" href="mailto:241830137@smail.nju.edu.cn"><i class="fas fa-envelope" aria-hidden="true"></i>Email</a>
+<div class="jb">
+  <h1 class="jb__name">Zijian Zhu</h1>
+
+  <p class="jb__links">
+    <a href="mailto:241830137@smail.nju.edu.cn">241830137@smail.nju.edu.cn</a>
+    <span class="jb__sep">/</span>
+    <a href="https://github.com/zzj637" target="_blank" rel="noopener">GitHub</a>
+    <span class="jb__sep">/</span>
+    <a href="{{ '/files/Zhu_Zijian_CV_EN.pdf' | relative_url }}">CV</a>
+    <span class="jb__sep">/</span>
+    <a href="{{ '/files/Zhu_Zijian_Transcript_EN.pdf' | relative_url }}">Transcript</a>
+    <span class="jb__sep">/</span>
+    <a href="{{ '/year-archive/' | relative_url }}">Blog</a>
+  </p>
+
+  <div class="jb__intro">
+    <div class="jb__bio">
+      <p>I am an undergraduate in statistics at Nanjing University, working on optimization for deep learning: how momentum, EMA-style lookahead and the geometry of matrix updates interact with the noise in stochastic gradients.</p>
+      <p>My research interests are machine learning, large language models, reinforcement learning and optimization. I try to keep the notes, slides and code behind each project together, so that the work can be reproduced rather than just described.</p>
     </div>
+    <!-- To add a portrait, put a square photo at images/portrait.jpg and uncomment:
+    <div class="jb__photo"><img src="{{ '/images/portrait.jpg' | relative_url }}" alt="Zijian Zhu" width="320" height="320"></div>
+    -->
   </div>
-</section>
 
-<!-- Downloads -->
-<section class="home-section" aria-labelledby="downloads-heading">
-  <h2 class="home-section__title" id="downloads-heading">Downloads</h2>
-  <div class="home-grid home-grid--2">
-    <article class="home-card">
-      <div class="home-card__icon"><i class="fas fa-file-lines" aria-hidden="true"></i></div>
-      <h3 class="home-card__title">Curriculum Vitae</h3>
-      <p class="home-card__text">Education, research experience and skills · 1 page</p>
-      <div class="home-card__actions">
-        <a class="home-btn home-btn--primary" href="{{ '/files/Zhu_Zijian_CV_EN.pdf' | relative_url }}" download><i class="fas fa-download" aria-hidden="true"></i>Download PDF</a>
-        <a class="home-btn" href="{{ '/files/Zhu_Zijian_CV_EN.pdf' | relative_url }}" target="_blank" rel="noopener"><i class="fas fa-file-pdf" aria-hidden="true"></i>Open PDF</a>
-      </div>
-    </article>
-    <article class="home-card">
-      <div class="home-card__icon"><i class="fas fa-scroll" aria-hidden="true"></i></div>
-      <h3 class="home-card__title">Academic Transcript</h3>
-      <p class="home-card__text">Official undergraduate transcript · 2 pages</p>
-      <div class="home-card__actions">
-        <a class="home-btn home-btn--primary" href="{{ '/files/Zhu_Zijian_Transcript_EN.pdf' | relative_url }}" download><i class="fas fa-download" aria-hidden="true"></i>Download PDF</a>
-        <a class="home-btn" href="{{ '/files/Zhu_Zijian_Transcript_EN.pdf' | relative_url }}" target="_blank" rel="noopener"><i class="fas fa-file-pdf" aria-hidden="true"></i>Open PDF</a>
-      </div>
-    </article>
-  </div>
-</section>
+  <h2 class="jb__h2">News</h2>
+  <ul class="jb__news">
+    <li><span class="jb__when">Nov 2026</span><span class="jb__what">Published <a href="{{ '/blog/a-note-for-optimizer/' | relative_url }}">A Note For Optimizer</a>, with two slide decks and the <a href="{{ '/files/signum-agreement-reproducible.zip' | relative_url }}">reproducible experiment code</a>.</span></li>
+    <li><span class="jb__when">Nov 2026</span><span class="jb__what">Wrote a password-protected essay on studying mathematics in the age of AI.</span></li>
+    <li><span class="jb__when">Oct 2026</span><span class="jb__what">Finished a remote research project on optimization for deep learning at Rutgers University&ndash;New Brunswick, advised by Yifan Hu.</span></li>
+    <li><span class="jb__when">2025</span><span class="jb__what">First Prize (Jiangsu Province), Chinese Mathematics Competitions; People&rsquo;s Scholarship, Nanjing University.</span></li>
+  </ul>
 
-<!-- About -->
-<section class="home-section" aria-labelledby="about-heading">
-  <h2 class="home-section__title" id="about-heading">About</h2>
-  <div class="home-about">
-    <p class="home-prose">Hi! I’m Zijian Zhu, a student from Nanjing University, learning mathematics and statistics. My research interest lies in large language models (LLMs).</p>
-    <aside class="home-about__aside">
-      <span class="home-about__icon"><i class="fas fa-futbol" aria-hidden="true"></i></span>
-      <p class="home-prose">I love playing football. My favourite football club is Liverpool.</p>
-    </aside>
-  </div>
-</section>
+  <h2 class="jb__h2">Writing</h2>
+  <ul class="jb__pubs">
+    {% for post in site.posts limit: 8 %}
+    <li class="jb__pub">
+      <span class="jb__when">{{ post.date | date: "%b %Y" }}</span>
+      <span class="jb__pub-body">
+        <a class="jb__title" href="{{ post.url | relative_url }}">{{ post.title }}</a>
+        {% if post.tags.size > 0 %}<span class="jb__venue">{{ post.tags | join: " &middot; " }}</span>{% endif %}
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
 
-<!-- Research interests -->
-<section class="home-section" aria-labelledby="interests-heading">
-  <h2 class="home-section__title" id="interests-heading">Research interests</h2>
-  <div class="home-grid">
-    <article class="home-card">
-      <div class="home-card__icon"><i class="fas fa-brain" aria-hidden="true"></i></div>
-      <h3 class="home-card__title">Exploring LLMs</h3>
-    </article>
-  </div>
-</section>
+  <h2 class="jb__h2">Education</h2>
+  <ul class="jb__pubs">
+    <li class="jb__pub">
+      <span class="jb__when">2024 &ndash;</span>
+      <span class="jb__pub-body">
+        <span class="jb__title">B.S. in Statistics, Nanjing University</span>
+        <span class="jb__venue">Nanjing, China &middot; Major GPA 4.63, rank 3/51</span>
+      </span>
+    </li>
+  </ul>
 
-<!-- Education & toolbox -->
-<section class="home-section" aria-labelledby="background-heading">
-  <h2 class="home-section__title" id="background-heading">Education &amp; toolbox</h2>
-  <div class="home-grid home-grid--2">
-    <div class="home-card">
-      <div class="home-card__icon"><i class="fas fa-graduation-cap" aria-hidden="true"></i></div>
-      <h3 class="home-card__title">Education</h3>
-      <div class="home-timeline">
-        <div class="home-timeline__item">
-          <p class="home-timeline__date">2024.9 – present</p>
-          <p class="home-timeline__title">B.S. in Statistics</p>
-          <p class="home-timeline__meta">Nanjing University · Nanjing, China</p>
-        </div>
-      </div>
-    </div>
-    <div class="home-card">
-      <div class="home-card__icon"><i class="fas fa-code" aria-hidden="true"></i></div>
-      <h3 class="home-card__title">Toolbox</h3>
-      <ul class="home-chips">
-        <li>Python</li>
-        <li>MATLAB</li>
-        <li>LaTeX</li>
-        <li>C / C++</li>
-      </ul>
-      <p class="home-card__note"><i class="fas fa-language" aria-hidden="true"></i>Chinese (native) · English</p>
-    </div>
-  </div>
-</section>
+  <h2 class="jb__h2">Tools</h2>
+  <p class="jb__text">Python, C/C++, MATLAB, LaTeX. Native Chinese, working English.</p>
 
-<!-- Writing -->
-<section class="home-section" aria-labelledby="writing-heading">
-  <h2 class="home-section__title" id="writing-heading">Writing</h2>
-  <a class="home-feature" href="{{ '/blog/what-to-do/' | relative_url }}">
-    <div>
-      <p class="home-feature__kicker">Latest note · November 25, 2026 · Password protected</p>
-      <h3 class="home-feature__title">怎么办？</h3>
-    </div>
-    <span class="home-feature__arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i></span>
-  </a>
-  <p class="home-section__more"><a href="{{ '/year-archive/' | relative_url }}">All posts <i class="fas fa-arrow-right" aria-hidden="true"></i></a></p>
-</section>
-
-
+  <p class="jb__foot">Last updated <time datetime="{{ site.time | date: '%Y-%m-%d' }}">{{ site.time | date: "%B %-d, %Y" }}</time>.</p>
+</div>
