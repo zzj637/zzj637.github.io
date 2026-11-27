@@ -1604,7 +1604,7 @@ html[data-theme="dark"] .page--jb {
 .jb__news > li,
 .jb__pub {
   display: grid;
-  grid-template-columns: 6rem minmax(0, 1fr);
+  grid-template-columns: 7rem minmax(0, 1fr);
   gap: 0.1rem 1rem;
   margin: 0 0 0.6rem;
 }
@@ -1633,13 +1633,6 @@ html[data-theme="dark"] .page--jb {
 
 .jb__text {
   margin: 0;
-}
-
-.jb__foot {
-  margin: 2.8rem 0 0;
-  color: var(--jb-soft);
-  font-size: 0.8rem;
-  text-align: right;
 }
 
 @media (max-width: 620px) {

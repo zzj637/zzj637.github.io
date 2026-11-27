@@ -35,8 +35,7 @@ redirect_from:
 
   <h2 class="jb__h2">News</h2>
   <ul class="jb__news">
-    <li><span class="jb__when">Nov 2026</span><span class="jb__what">Published <a href="{{ '/blog/a-note-for-optimizer/' | relative_url }}">A Note For Optimizer</a>, with two slide decks and the <a href="{{ '/files/signum-agreement-reproducible.zip' | relative_url }}">reproducible experiment code</a>.</span></li>
-    <li><span class="jb__when">Nov 2026</span><span class="jb__what">Wrote a password-protected essay on studying mathematics in the age of AI.</span></li>
+    <li><span class="jb__when">Nov 2026</span><span class="jb__what">Published <a href="{{ '/blog/a-note-for-optimizer/' | relative_url }}">A Note For Optimizer</a>, with two slide decks and the <a href="{{ '/files/signum-agreement-reproducible.zip' | relative_url }}">reproducible experiment code</a>, and a password-protected essay on studying mathematics in the age of AI.</span></li>
     <li><span class="jb__when">Oct 2026</span><span class="jb__what">Finished a remote research project on optimization for deep learning at Rutgers University&ndash;New Brunswick, advised by Yifan Hu.</span></li>
     <li><span class="jb__when">2025</span><span class="jb__what">First Prize (Jiangsu Province), Chinese Mathematics Competitions; People&rsquo;s Scholarship, Nanjing University.</span></li>
   </ul>
@@ -45,7 +44,7 @@ redirect_from:
   <ul class="jb__pubs">
     {% for post in site.posts limit: 8 %}
     <li class="jb__pub">
-      <span class="jb__when">{{ post.date | date: "%b %Y" }}</span>
+      <span class="jb__when">{{ post.date | date: "%b %-d, %Y" }}</span>
       <span class="jb__pub-body">
         <a class="jb__title" href="{{ post.url | relative_url }}">{{ post.title }}</a>
         {% if post.tags.size > 0 %}<span class="jb__venue">{{ post.tags | join: " &middot; " }}</span>{% endif %}
@@ -57,7 +56,7 @@ redirect_from:
   <h2 class="jb__h2">Education</h2>
   <ul class="jb__pubs">
     <li class="jb__pub">
-      <span class="jb__when">2024 &ndash;</span>
+      <span class="jb__when">2024 &ndash; present</span>
       <span class="jb__pub-body">
         <span class="jb__title">B.S. in Statistics, Nanjing University</span>
         <span class="jb__venue">Nanjing, China &middot; Major GPA 4.63, rank 3/51</span>
@@ -67,6 +66,4 @@ redirect_from:
 
   <h2 class="jb__h2">Tools</h2>
   <p class="jb__text">Python, C/C++, MATLAB, LaTeX. Native Chinese, working English.</p>
-
-  <p class="jb__foot">Last updated <time datetime="{{ site.time | date: '%Y-%m-%d' }}">{{ site.time | date: "%B %-d, %Y" }}</time>.</p>
 </div>
