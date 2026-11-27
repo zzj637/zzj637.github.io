@@ -769,7 +769,7 @@ code {
 
 .res__item {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: baseline;
   gap: 0.15rem 0.75rem;
   padding: 0.7rem 0;
@@ -821,6 +821,10 @@ code {
 }
 
 @media (max-width: 680px) {
+  .res__item {
+    flex-wrap: wrap;
+  }
+
   .res__actions {
     width: 100%;
     margin-left: 0;
